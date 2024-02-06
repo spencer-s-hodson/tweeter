@@ -1,6 +1,4 @@
 import "./App.css";
-import { useContext } from "react";
-import { UserInfoContext } from "./components/userInfo/UserInfoProvider";
 import {
   BrowserRouter,
   Navigate,
@@ -15,7 +13,7 @@ import Toaster from "./components/toaster/Toaster";
 import { AuthToken, User, FakeData, Status } from "tweeter-shared";
 import UserItemScroller from "./components/mainLayout/UserItemScroller";
 import StatusItemScroller from "./components/mainLayout/StatusItemScroller";
-import useUserInfo from "./components/userInfo/userInfoHook";
+import useUserInfo from "./components/Hooks/userInfoHook";
 
 const App = () => {
   const { currentUser, authToken } = useUserInfo();

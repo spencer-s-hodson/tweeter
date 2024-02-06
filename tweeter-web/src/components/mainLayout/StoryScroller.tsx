@@ -1,10 +1,9 @@
-import { useContext } from "react";
-import { UserInfoContext } from "../userInfo/UserInfoProvider";
 import { AuthToken, FakeData, Status, User } from "tweeter-shared";
 import { useState, useRef, useEffect } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import useToastListener from "../toaster/ToastListenerHook";
 import StatusItem from "../statusItem/StatusItem";
+import useUserInfo from "../Hooks/userInfoHook";
 
 export const PAGE_SIZE = 10;
 
@@ -22,8 +21,8 @@ const StoryScroller = () => {
   const addItems = (newItems: Status[]) =>
     setItems([...itemsReference.current, ...newItems]);
 
-  const { displayedUser, setDisplayedUser, currentUser, authToken } =
-    useContext(UserInfoContext);
+  const { displayedUser, authToken } =
+    useUserInfo();
 
   // Load initial items
   useEffect(() => {

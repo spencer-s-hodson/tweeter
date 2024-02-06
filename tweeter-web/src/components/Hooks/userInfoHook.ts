@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { UserInfoContext } from "./UserInfoProvider";
+import { UserInfoContext } from "../userInfo/UserInfoProvider";
 
 const useUserInfo = () => useContext(UserInfoContext);
 
