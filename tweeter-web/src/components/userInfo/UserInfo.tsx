@@ -35,7 +35,7 @@ const UserInfo = () => {
         setIsFollower(false);
       } else {
         setIsFollower(
-          await getIsFollowerStatus(authToken!, currentUser!, displayedUser!)
+          await getIsFollowerStatus(authToken!, currentUser!, displayedUser!)  // calls fake data
         );
       }
     } catch (error) {
