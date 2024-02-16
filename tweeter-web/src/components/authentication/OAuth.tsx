@@ -1,17 +1,11 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { OverlayTrigger, Tooltip } from "react-bootstrap"
-import useToastListener from "../toaster/ToastListenerHook";
 
 interface Props {
   displayInfoMessageWithDarkBackground: (message: string) => void;
 }
 
 const OAuth = (props: Props) => {
-  const { displayInfoMessage } = useToastListener();
-  // const displayInfoMessageWithDarkBackground = (message: string): void => {
-  //   displayInfoMessage(message, 3000, "text-white bg-primary");
-  // };
-
   return (
     <div className="text-center mb-3">
       <button

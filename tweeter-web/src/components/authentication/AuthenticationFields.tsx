@@ -6,9 +6,6 @@ interface Props {
 }
 
 const AuthenticationFields = (props: Props) => {
-  // const [alias, setAlias] = useState(props.alias);
-  // const [password, setPassword] = useState(props.password);
-
   return (
     <>
       <div className="form-floating">

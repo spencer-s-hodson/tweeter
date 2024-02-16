@@ -83,7 +83,7 @@ const AuthenticatedRoutes = () => {
         <Route index element={<Navigate to="/feed" />} />
         
         <Route path="feed" element={<StatusItemScroller loadItems={ loadMoreFeedItems } itemDescription="feed" />} />
-        <Route path="feed" element={<StatusItemScroller loadItems={ loadMoreStoryItems } itemDescription="story" />} />
+        <Route path="story" element={<StatusItemScroller loadItems={ loadMoreStoryItems } itemDescription="story" />} />
 
         <Route
           path="following"

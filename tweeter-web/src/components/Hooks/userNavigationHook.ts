@@ -7,7 +7,6 @@ const useUserNavigation = () => {
   const { displayErrorMessage } = useToastListener();
   const { setDisplayedUser, currentUser, authToken } = useUserInfo();
 
-
   const navigateToUser = async (event: React.MouseEvent): Promise<void> => {
     event.preventDefault();
 
@@ -41,12 +40,6 @@ const useUserNavigation = () => {
     return FakeData.instance.findUserByAlias(alias);
   };
 
-
   return navigateToUser;
-
-
-
-
-
-}
+};
 export default useUserNavigation;
