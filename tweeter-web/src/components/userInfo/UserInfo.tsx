@@ -1,9 +1,11 @@
 import "./UserInfo.css";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { AuthToken, FakeData, User } from "tweeter-shared";
+import { AuthToken, User } from "tweeter-shared";
 import useToastListener from "../toaster/ToastListenerHook";
 import useUserInfo from "../Hooks/userInfoHook";
+import { UserInfoPresenter } from "../../presenter/UserInfoPresenter";
+import UserInfoView from "../../presenter/UserInfoPresenter";
 
 const UserInfo = () => {
   const [isFollower, setIsFollower] = useState(false);
@@ -25,163 +27,47 @@ const UserInfo = () => {
     setNumbFollowers(authToken!, displayedUser!);
   });
 
-  const setIsFollowerStatus = async (
-    authToken: AuthToken,
-    currentUser: User,
-    displayedUser: User
-  ) => {
-    try {
-      if (currentUser === displayedUser) {
-        setIsFollower(false);
-      } else {
-        setIsFollower(
-          await getIsFollowerStatus(authToken!, currentUser!, displayedUser!)  // calls fake data
-        );
-      }
-    } catch (error) {
-      displayErrorMessage(
-        `Failed to determine follower status because of exception: ${error}`
-      );
-    }
+
+  const listener: UserInfoView = {
+    displayErrorMessage: displayErrorMessage,
+    displayInfoMessage: displayInfoMessage,
+    clearLastInfoMessage: clearLastInfoMessage,
+    setIsFollower: setIsFollower,
+    setFolloweesCount: setFolloweesCount,
+    setFollowersCount: setFollowersCount,
+    setDisplayedUser: setDisplayedUser
   };
 
-  const getIsFollowerStatus = async (
-    authToken: AuthToken,
-    user: User,
-    selectedUser: User
-  ): Promise<boolean> => {
-    // TODO: Replace with the result of calling server
-    return FakeData.instance.isFollower();
+
+  const [presenter] = useState(new UserInfoPresenter(listener));
+
+
+  const setIsFollowerStatus = async (authToken: AuthToken, currentUser: User, displayedUser: User) => {
+    presenter.setIsFollowerStatus(authToken, currentUser, displayedUser);
   };
 
-  const setNumbFollowees = async (
-    authToken: AuthToken,
-    displayedUser: User
-  ) => {
-    try {
-      setFolloweesCount(await getFolloweesCount(authToken, displayedUser));
-    } catch (error) {
-      displayErrorMessage(
-        `Failed to get followees count because of exception: ${error}`
-      );
-    }
+  const setNumbFollowees = async (authToken: AuthToken, displayedUser: User) => {
+    presenter.setNumbFollowees(authToken, displayedUser);
   };
 
-  const getFolloweesCount = async (
-    authToken: AuthToken,
-    user: User
-  ): Promise<number> => {
-    // TODO: Replace with the result of calling server
-    return FakeData.instance.getFolloweesCount(user);
-  };
-
-  const setNumbFollowers = async (
-    authToken: AuthToken,
-    displayedUser: User
-  ) => {
-    try {
-      setFollowersCount(await getFollowersCount(authToken, displayedUser));
-    } catch (error) {
-      displayErrorMessage(
-        `Failed to get followers count because of exception: ${error}`
-      );
-    }
-  };
-
-  const getFollowersCount = async (
-    authToken: AuthToken,
-    user: User
-  ): Promise<number> => {
-    // TODO: Replace with the result of calling server
-    return FakeData.instance.getFollowersCount(user);
+  const setNumbFollowers = async (authToken: AuthToken, displayedUser: User) => {
+    presenter.setNumbFollowers(authToken, displayedUser);
   };
 
   const switchToLoggedInUser = (event: React.MouseEvent): void => {
     event.preventDefault();
-    setDisplayedUser(currentUser!);
+    presenter.switchToLoggedInUser(currentUser!)
   };
 
-  const followDisplayedUser = async (
-    event: React.MouseEvent
-  ): Promise<void> => {
+  const followDisplayedUser = async (event: React.MouseEvent, authToken: AuthToken, userToFollow: User): Promise<void> => {
     event.preventDefault();
-
-    try {
-      displayInfoMessage(`Adding ${displayedUser!.name} to followers...`, 0);
-
-      let [followersCount, followeesCount] = await follow(
-        authToken!,
-        displayedUser!
-      );
-
-      clearLastInfoMessage();
-
-      setIsFollower(true);
-      setFollowersCount(followersCount);
-      setFolloweesCount(followeesCount);
-    } catch (error) {
-      displayErrorMessage(
-        `Failed to follow user because of exception: ${error}`
-      );
-    }
+    presenter.followDisplayedUser(authToken, userToFollow);
   };
 
-  const follow = async (
-    authToken: AuthToken,
-    userToFollow: User
-  ): Promise<[followersCount: number, followeesCount: number]> => {
-    // Pause so we can see the following message. Remove when connected to the server
-    await new Promise((f) => setTimeout(f, 2000));
-
-    // TODO: Call the server
-
-    let followersCount = await getFollowersCount(authToken, userToFollow);
-    let followeesCount = await getFolloweesCount(authToken, userToFollow);
-
-    return [followersCount, followeesCount];
-  };
-
-  const unfollowDisplayedUser = async (
-    event: React.MouseEvent
-  ): Promise<void> => {
+  const unfollowDisplayedUser = async (event: React.MouseEvent, authToken: AuthToken, displayedUser: User): Promise<void> => {
     event.preventDefault();
-
-    try {
-      displayInfoMessage(
-        `Removing ${displayedUser!.name} from followers...`,
-        0
-      );
-
-      let [followersCount, followeesCount] = await unfollow(
-        authToken!,
-        displayedUser!
-      );
-
-      clearLastInfoMessage();
-
-      setIsFollower(false);
-      setFollowersCount(followersCount);
-      setFolloweesCount(followeesCount);
-    } catch (error) {
-      displayErrorMessage(
-        `Failed to unfollow user because of exception: ${error}`
-      );
-    }
-  };
-
-  const unfollow = async (
-    authToken: AuthToken,
-    userToUnfollow: User
-  ): Promise<[followersCount: number, followeesCount: number]> => {
-    // Pause so we can see the unfollowing message. Remove when connected to the server
-    await new Promise((f) => setTimeout(f, 2000));
-
-    // TODO: Call the server
-
-    let followersCount = await getFollowersCount(authToken, userToUnfollow);
-    let followeesCount = await getFolloweesCount(authToken, userToUnfollow);
-
-    return [followersCount, followeesCount];
+    presenter.unfollowDisplayedUser(authToken, displayedUser);
+    
   };
 
   return (
@@ -230,7 +116,7 @@ const UserInfo = () => {
                       id="unFollowButton"
                       className="btn btn-md btn-secondary me-1"
                       type="submit"
-                      onClick={(event) => unfollowDisplayedUser(event)}
+                      onClick={(event) => unfollowDisplayedUser(event, authToken!, displayedUser!)}
                     >
                       Unfollow
                     </button>
@@ -239,7 +125,7 @@ const UserInfo = () => {
                       id="followButton"
                       className="btn btn-md btn-primary me-1"
                       type="submit"
-                      onClick={(event) => followDisplayedUser(event)}
+                      onClick={(event) => followDisplayedUser(event, authToken!, displayedUser!)}  // this might be wrong
                     >
                       Follow
                     </button>

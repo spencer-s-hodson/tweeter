@@ -35,7 +35,7 @@ const UserItemScroller = (props: Props) => {
   const [presenter] = useState(props.presenterGenerator(listener));
 
   const loadMoreItems = async () => {
-    presenter.loadMoreItems(authToken!, displayedUser!); // ! means that we don't want it to be null because here it can be
+    presenter.loadMoreItems(authToken!, displayedUser!); // ! means that we don't want it to be null because here it can't be
   };
 
   return (

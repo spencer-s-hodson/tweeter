@@ -7,6 +7,7 @@ import { AuthToken, FakeData, User } from "tweeter-shared";
 import useToastListener from "../../toaster/ToastListenerHook";
 import AuthenticationFields from "../AuthenticationFields";
 import useUserInfo from "../../Hooks/userInfoHook";
+import { LoginPresenter, LoginView } from "../../../presenter/authenicationPresenters/LoginPresenter";
 
 interface Props {
   originalUrl?: string;
@@ -28,36 +29,16 @@ const Login = (props: Props) => {
     return !alias || !password;
   };
 
+  const listener: LoginView = {
+    navigate: navigate,
+    updateUserInfo: updateUserInfo,
+    displayErrorMessage: displayErrorMessage
+  }
+
+  const [presenter] = useState(new LoginPresenter(listener));
+
   const doLogin = async () => {
-    try {
-      let [user, authToken] = await login(alias, password);
-
-      updateUserInfo(user, user, authToken, rememberMeRef.current);
-
-      if (!!props.originalUrl) {
-        navigate(props.originalUrl);
-      } else {
-        navigate("/");
-      }
-    } catch (error) {
-      displayErrorMessage(
-        `Failed to log user in because of exception: ${error}`
-      );
-    }
-  };
-
-  const login = async (
-    alias: string,
-    password: string
-  ): Promise<[User, AuthToken]> => {
-    // TODO: Replace with the result of calling the server
-    let user = FakeData.instance.firstUser;
-
-    if (user === null) {
-      throw new Error("Invalid alias or password");
-    }
-
-    return [user, FakeData.instance.authToken];
+    presenter.doLogin(alias!, password!, props.originalUrl!, rememberMeRef.current);
   };
 
   const inputFieldGenerator = () => {
