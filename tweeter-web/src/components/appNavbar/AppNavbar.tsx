@@ -9,9 +9,9 @@ import useUserInfo from "../Hooks/userInfoHook";
 const AppNavbar = () => {
   const location = useLocation();
   const { authToken, clearUserInfo } = useUserInfo();
-  const { displayInfoMessage, displayErrorMessage, clearLastInfoMessage } =
-    useToastListener();
+  const { displayInfoMessage, displayErrorMessage, clearLastInfoMessage } = useToastListener();
 
+  // comment out these two functions
   const logOut = async () => {
     displayInfoMessage("Logging Out...", 0);
 
