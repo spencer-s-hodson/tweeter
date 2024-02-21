@@ -1,5 +1,4 @@
 import { AuthToken, Status, User } from "tweeter-shared";
-import Post from "../components/statusItem/Post";
 import { StatusService } from "../model/service/StatusService";
 
 
@@ -19,7 +18,8 @@ export class PostPresenter {
         this.service = new StatusService();
     }
 
-    public async submitPost(post: string, currentUser: User, authToken: AuthToken) {
+    public async submitPost(event: React.MouseEvent, post: string, currentUser: User, authToken: AuthToken) {
+        event.preventDefault();
         try {
             this.view.displayInfoMessage("Posting status...", 0);
 
@@ -34,14 +34,15 @@ export class PostPresenter {
             this.view.displayErrorMessage(
                 `Failed to post the status because of exception: ${error}`
             );
-        }
+        };
     };
 
-    public clearPost() {
+    public clearPost(event: React.MouseEvent) {    
+        event.preventDefault();
         this.view.setPost("");
-    }
+    };
 
-    public checkButtonStatus(post: string, authToken: AuthToken | undefined, currentUser: User | undefined): boolean {
+    public checkButtonStatus(post: string, authToken: AuthToken | null, currentUser: User | null): boolean {
         return !post.trim() || !authToken || !currentUser;
     };
 };

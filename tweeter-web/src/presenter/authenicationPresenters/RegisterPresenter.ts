@@ -51,6 +51,7 @@ export class RegisterPresenter {
     }
   };
 
+  // go look for the message on slack about rememberMe
   public async doRegister(firstName: string, lastName: string, alias: string, password: string, imageBytes: Uint8Array, rememberMe: boolean) {
     try {
       let [user, authToken] = await this.service.register(
@@ -68,5 +69,9 @@ export class RegisterPresenter {
         `Failed to register user because of exception: ${error}`
       );
     };
+  };
+
+  public checkSubmitButtonStatus(firstName: string, lastName: string, alias: string, password: string, imageUrl: string): boolean {
+    return !firstName || !lastName || !alias || !password || !imageUrl;
   };
 };

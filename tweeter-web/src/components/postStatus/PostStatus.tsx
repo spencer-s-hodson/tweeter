@@ -1,6 +1,5 @@
 import "./PostStatus.css";
 import { useState } from "react";
-import { AuthToken, Status } from "tweeter-shared";
 import useToastListener from "../toaster/ToastListenerHook";
 import useUserInfo from "../Hooks/userInfoHook";
 import { PostPresenter, PostView } from "../../presenter/PostPresenter";
@@ -22,43 +21,15 @@ const PostStatus = () => {
   const [presenter] = useState(new PostPresenter(listener));
 
   const submitPost = async (event: React.MouseEvent) => {
-    event.preventDefault();
-    presenter.submitPost(post, currentUser!, authToken!)
-
-    // try {
-    //   displayInfoMessage("Posting status...", 0);
-
-    //   let status = new Status(post, currentUser!, Date.now());
-
-    //   await postStatus(authToken!, status);
-
-    //   clearLastInfoMessage();
-    //   setPost("");
-    //   displayInfoMessage("Status posted!", 2000);
-    // } catch (error) {
-    //   displayErrorMessage(
-    //     `Failed to post the status because of exception: ${error}`
-    //   );
-    // }
+    presenter.submitPost(event, post, currentUser!, authToken!)
   };
 
-  // const postStatus = async (
-  //   authToken: AuthToken,
-  //   newStatus: Status
-  // ): Promise<void> => {
-  //   // Pause so we can see the logging out message. Remove when connected to the server
-  //   await new Promise((f) => setTimeout(f, 2000));
-
-  //   // TODO: Call the server to post the status
-  // };
-
   const clearPost = (event: React.MouseEvent) => {
-    event.preventDefault();
-    presenter.clearPost();
+    presenter.clearPost(event);
   };
 
   const checkButtonStatus: () => boolean = () => {
-    return presenter.checkButtonStatus(post, authToken!, currentUser!);
+    return presenter.checkButtonStatus(post, authToken, currentUser);
   };
 
   return (

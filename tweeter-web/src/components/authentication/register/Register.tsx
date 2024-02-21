@@ -3,8 +3,6 @@ import "bootstrap/dist/css/bootstrap.css";
 import { ChangeEvent, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthenticationFormLayout from "../AuthenticationFormLayout";
-import { AuthToken, FakeData, User } from "tweeter-shared";
-import { Buffer } from "buffer";
 import useToastListener from "../../toaster/ToastListenerHook";
 import AuthenticationFields from "../AuthenticationFields";
 import useUserInfo from "../../Hooks/userInfoHook";
@@ -26,10 +24,6 @@ const Register = () => {
   const { updateUserInfo } = useUserInfo();
   const { displayErrorMessage } = useToastListener();
 
-  const checkSubmitButtonStatus = (): boolean => {
-    return !firstName || !lastName || !alias || !password || !imageUrl;
-  };
-
   const listener: RegisterView = {
     navigate: navigate,
     updateUserInfo: updateUserInfo,
@@ -46,6 +40,10 @@ const Register = () => {
 
   const doRegister = async () => {
     presenter.doRegister(firstName!, lastName!, alias!, password!, imageBytes!, rememberMeRef.current);
+  };
+
+  const checkSubmitButtonStatus = (): boolean => {
+    return presenter.checkSubmitButtonStatus(firstName, lastName, alias, password, imageUrl);
   };
 
   const inputFieldGenerator = () => {

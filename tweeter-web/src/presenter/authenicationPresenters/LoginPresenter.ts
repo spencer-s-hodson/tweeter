@@ -5,6 +5,7 @@ export interface LoginView {
   navigate: (url: string) => void;
   updateUserInfo: (currentUser: User, displayedUser: User | null, authToken: AuthToken, remember: boolean) => void;
   displayErrorMessage: (message: string) => void;
+  
 }
 
 export class LoginPresenter {
@@ -33,4 +34,8 @@ export class LoginPresenter {
       );
     }
   };
-}
+
+  public checkSubmitButtonStatus(alias: string, password: string) {
+    return !alias || !password;
+  }
+};

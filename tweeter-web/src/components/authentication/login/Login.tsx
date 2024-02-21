@@ -3,7 +3,6 @@ import "bootstrap/dist/css/bootstrap.css";
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthenticationFormLayout from "../AuthenticationFormLayout";
-import { AuthToken, FakeData, User } from "tweeter-shared";
 import useToastListener from "../../toaster/ToastListenerHook";
 import AuthenticationFields from "../AuthenticationFields";
 import useUserInfo from "../../Hooks/userInfoHook";
@@ -25,10 +24,6 @@ const Login = (props: Props) => {
   const rememberMeRef = useRef(rememberMe);
   rememberMeRef.current = rememberMe;
 
-  const checkSubmitButtonStatus = (): boolean => {
-    return !alias || !password;
-  };
-
   const listener: LoginView = {
     navigate: navigate,
     updateUserInfo: updateUserInfo,
@@ -36,6 +31,10 @@ const Login = (props: Props) => {
   }
 
   const [presenter] = useState(new LoginPresenter(listener));
+
+  const checkSubmitButtonStatus = (): boolean => {
+    return presenter.checkSubmitButtonStatus(alias, password);
+  };
 
   const doLogin = async () => {
     presenter.doLogin(alias!, password!, props.originalUrl!, rememberMeRef.current);
