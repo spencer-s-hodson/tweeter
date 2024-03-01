@@ -1,9 +1,8 @@
 import { AuthToken, User } from "tweeter-shared";
-import { UserService } from "../model/service/UserService";
 import { FollowService } from "../model/service/FollowService";
 
 export default interface UserInfoView {
-  displayErrorMessage: (message: string) => void;
+  displayErrorMessage: (message: string) => void; // these can all be moved into a message view or something
   displayInfoMessage: (message: string, duration: number) => void;
   clearLastInfoMessage: () => void;
   setIsFollower: (isFollower: boolean) => void;

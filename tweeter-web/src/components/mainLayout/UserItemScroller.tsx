@@ -47,7 +47,7 @@ const UserItemScroller = (props: Props) => {
         hasMore={presenter.hasMoreItems}
         loader={<h4>Loading...</h4>}
       >
-        {items.map((item, index) => (
+        {items.map((item, index) => (  // this is going on forever
           <div
             key={index}
             className="row mb-3 mx-0 px-0 border rounded bg-white"
