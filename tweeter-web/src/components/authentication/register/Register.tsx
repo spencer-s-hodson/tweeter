@@ -39,7 +39,7 @@ const Register = () => {
   };
 
   const doRegister = async () => {
-    presenter.doRegister(firstName!, lastName!, alias!, password!, imageBytes!, rememberMeRef.current);
+    presenter.doAuthentication(alias!, password!, rememberMeRef.current, firstName!, lastName!, imageBytes!);
   };
 
   const checkSubmitButtonStatus = (): boolean => {

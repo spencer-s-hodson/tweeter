@@ -6,8 +6,6 @@ import StatusItem from "../statusItem/StatusItem";
 import useUserInfo from "../Hooks/userInfoHook";
 import { StatusItemPresenter, StatusItemView } from "../../presenter/statusItemPresenter/StatusItemPresenter";
 
-export const PAGE_SIZE = 10;
-
 interface Props {
   presenterGenerator: (view: StatusItemView) => StatusItemPresenter;
 }

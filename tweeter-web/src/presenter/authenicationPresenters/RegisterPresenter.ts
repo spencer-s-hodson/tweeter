@@ -1,25 +1,14 @@
 import { Buffer } from "buffer";
-import { AuthToken, User } from "tweeter-shared";
-import { UserService } from "../../model/service/UserService";
 import { ChangeEvent } from "react";
+import { AuthenticationPresenter, AuthenticationView } from "./AuthenticationPresenter";
+import { AuthToken, User } from "tweeter-shared";
 
-export interface RegisterView {
-  navigate: (url: string) => void;
-  updateUserInfo: (currentUser: User, displayedUser: User | null, authToken: AuthToken, remember: boolean) => void;
-  displayErrorMessage: (message: string) => void;
+export interface RegisterView extends AuthenticationView {
   setImageUrl: (url: string) => void;
   setImageBytes: (bytes: Uint8Array) => void;
 }
 
-export class RegisterPresenter {
-  private view: RegisterView;
-  private service: UserService;
-
-  public constructor(view: RegisterView) {
-    this.view = view;
-    this.service = new UserService();
-  }
-
+export class RegisterPresenter extends AuthenticationPresenter {
   public handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     this.handleImageFile(file);
@@ -51,27 +40,19 @@ export class RegisterPresenter {
     }
   };
 
-  // go look for the message on slack about rememberMe
-  public async doRegister(firstName: string, lastName: string, alias: string, password: string, imageBytes: Uint8Array, rememberMe: boolean) {
-    try {
-      let [user, authToken] = await this.service.register(
-        firstName,
-        lastName,
-        alias,
-        password,
-        imageBytes
-      );
-
-      this.view.updateUserInfo(user, user, authToken, rememberMe);
-      this.view.navigate("/");
-    } catch (error) {
-      this.view.displayErrorMessage(
-        `Failed to register user because of exception: ${error}`
-      );
-    };
+  public checkSubmitButtonStatus(alias: string, password: string, firstName: string, lastName: string, imageUrl: string): boolean {
+    return !firstName || !lastName || !alias || !password || !imageUrl;
   };
 
-  public checkSubmitButtonStatus(firstName: string, lastName: string, alias: string, password: string, imageUrl: string): boolean {
-    return !firstName || !lastName || !alias || !password || !imageUrl;
+  protected async getOperation(alias: string, password: string, firstName: string, lastName: string, imageBytes: Uint8Array): Promise<[User, AuthToken]> {
+    return this.service.register(firstName, lastName, alias, password, imageBytes);
+  };
+
+  protected getItemDesription(): string {
+    return "register user";
+  };
+
+  protected get view() {
+    return super.view as RegisterView;
   };
 };
