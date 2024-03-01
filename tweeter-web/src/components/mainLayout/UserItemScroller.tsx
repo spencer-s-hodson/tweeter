@@ -4,7 +4,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import UserItem from "../userItem/UserItem";
 import useToastListener from "../toaster/ToastListenerHook";
 import useUserInfo from "../Hooks/userInfoHook";
-import { UserItemPresenter, UserItemView } from "../../presenter/userItemPresenters/UserItemPresenter";
+import { UserItemPresenter, UserItemView } from "../../presenter/itemPresenters/userItemPresenters/UserItemPresenter";
 
 interface Props {
   presenterGenerator: (view: UserItemView) => UserItemPresenter;

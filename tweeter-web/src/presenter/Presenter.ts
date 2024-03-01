@@ -1,11 +1,13 @@
-export interface View { // these should not be here
+export interface View {
   displayErrorMessage: (message: string) => void;
 };
 
+export interface InfoMessageView extends View {
+  displayInfoMessage: (message: string, duration: number, bootstrapClasses?: string) => void;
+  clearLastInfoMessage: () => void;
+};
+
 export abstract class Presenter {
-  // make sure all presenters come from here
-  // call do failure from all presenters
-  // HINT: go look at loginpresenter and register presenter
   private _view: View;
 
   protected constructor(view: View) {

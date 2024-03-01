@@ -1,24 +1,22 @@
 import { AuthToken, User } from "tweeter-shared";
 import { UserService } from "../model/service/UserService";
+import { Presenter, View } from "./Presenter";
 
-export interface UserNavigationHookView {
+export interface UserNavigationHookView extends View {
   setDisplayedUser: (user: User) => void;
-  displayErrorMessage: (message: string, bootstrapClasses?: string) => void;
-}
+};
 
-export class UserNavigationHookPresenter {
-  private view: UserNavigationHookView;
+export class UserNavigationHookPresenter extends Presenter {
   private service: UserService;
 
   public constructor(view: UserNavigationHookView) {
-    this.view = view;
+    super(view);
     this.service = new UserService();
   };
 
   public async navigateToUser(event: React.MouseEvent, currentUser: User, authToken: AuthToken): Promise<void> {
     event.preventDefault();
-
-    try {
+    this.doFailureReportingOperation(async() => {
       let alias = this.extractAlias(event.target.toString());
 
       let user = await this.service.getUser(authToken!, alias);
@@ -28,15 +26,21 @@ export class UserNavigationHookPresenter {
           this.view.setDisplayedUser(currentUser!);
         } else {
           this.view.setDisplayedUser(user);
-        }
-      }
-    } catch (error) {
-      this.view.displayErrorMessage(`Failed to get user because of exception: ${error}`);
-    }
+        };
+      };
+    }, this.getItemDescription());
   };
 
   public extractAlias(value: string): string {
     let index = value.indexOf("@");
     return value.substring(index);
+  };
+
+  protected getItemDescription(): string {
+    return "get user";
+  };
+
+  protected get view(): UserNavigationHookView {
+    return super.view as UserNavigationHookView;
   };
 };
