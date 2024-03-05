@@ -54,9 +54,10 @@ const StatusItemScroller = (props: Props) => {
           >
             <StatusItem item={ item }/>
           </div>
-        ))}
+        ))};
       </InfiniteScroll>
     </div>
-  )
-}
+  );
+};
+
 export default StatusItemScroller;

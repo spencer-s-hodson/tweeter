@@ -1,18 +1,17 @@
-import { User } from "tweeter-shared";
-import { useState, useRef, useEffect } from "react";
-import InfiniteScroll from "react-infinite-scroll-component";
+import { useEffect, useRef, useState } from "react";
+import { PagedItemPresenter, PagedItemView } from "../../presenter/itemPresenters/PagedItemPresenter";
 import useToastListener from "../toaster/ToastListenerHook";
-import UserItem from "../userItem/UserItem";
 import useUserInfo from "../Hooks/userInfoHook";
-import { UserItemPresenter, UserItemView } from "../../presenter/itemPresenters/userItemPresenters/UserItemPresenter";
+import InfiniteScroll from "react-infinite-scroll-component";
 
-interface Props {
-  presenterGenerator: (view: UserItemView) => UserItemPresenter;
+interface Props<T, U> {
+  renderFunction: (item: T) => JSX.Element;
+  presenterGenerator: (view: PagedItemView<T>) => PagedItemPresenter<T, U>;
 }
 
-const UserItemScroller = (props: Props) => {
+function ItemScroller<T, U>({ renderFunction, presenterGenerator }: Props<T, U>) {
   const { displayErrorMessage } = useToastListener();
-  const [items, setItems] = useState<User[]>([]);
+  const [items, setItems] = useState<T[]>([]);
 
   // Required to allow the addItems method to see the current value of 'items'
   // instead of the value from when the closure was created.
@@ -27,15 +26,15 @@ const UserItemScroller = (props: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const listener: UserItemView = {
-    addItems: (newItems: User[]) => setItems([...itemsReference.current, ...newItems]),
-    displayErrorMessage: displayErrorMessage
+  const listener: PagedItemView<T> = {
+    addItems: (newItems: T[]) => setItems([...itemsReference.current, ...newItems]),
+    displayErrorMessage,
   };
 
-  const [presenter] = useState(props.presenterGenerator(listener));
+  const [presenter] = useState(presenterGenerator(listener));
 
   const loadMoreItems = async () => {
-    presenter.loadMoreItems(authToken!, displayedUser!); // ! means that we don't want it to be null because here it can't be
+    presenter.loadMoreItems(authToken!, displayedUser!);
   };
 
   return (
@@ -48,16 +47,16 @@ const UserItemScroller = (props: Props) => {
         loader={<h4>Loading...</h4>}
       >
         {items.map((item, index) => (
-          <div
-            key={index}
+          <div 
+            key={index} 
             className="row mb-3 mx-0 px-0 border rounded bg-white"
           >
-            <UserItem value={item} />
+            { renderFunction(item) }
           </div>
-        ))}
+        ))};
       </InfiniteScroll>
     </div>
   );
 };
 
-export default UserItemScroller;
+export default ItemScroller;
