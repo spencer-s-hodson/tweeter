@@ -2,20 +2,18 @@ import { AuthToken, Status, User } from "tweeter-shared";
 import { StatusService } from "../model/service/StatusService";
 import { InfoMessageView, Presenter } from "./Presenter";
 
-export interface PostView extends InfoMessageView {
+export interface PostStatusView extends InfoMessageView {
     setPost: (post: string) => void;
 }
 
-export class PostPresenter extends Presenter {
-    private service: StatusService;
+export class PostStatusPresenter extends Presenter {
+    private _service: StatusService | null = null;
 
-    public constructor(view: PostView) {
+    public constructor(view: PostStatusView) {
         super(view);
-        this.service = new StatusService();
     }
 
-    public async submitPost(event: React.MouseEvent, post: string, currentUser: User, authToken: AuthToken) {
-        event.preventDefault();
+    public async submitPost(post: string, currentUser: User, authToken: AuthToken) {
         this.doFailureReportingOperation(async () => {
             this.view.displayInfoMessage("Posting status...", 0);
 
@@ -29,8 +27,7 @@ export class PostPresenter extends Presenter {
         }, this.getItemDescription())
     };
 
-    public clearPost(event: React.MouseEvent) {
-        event.preventDefault();
+    public clearPost() {
         this.view.setPost("");
     };
 
@@ -42,7 +39,14 @@ export class PostPresenter extends Presenter {
         return "post to status";
     }
 
-    protected get view(): PostView {
-        return super.view as PostView;
+    protected get view(): PostStatusView {
+        return super.view as PostStatusView;
+    }
+
+    public get service(): StatusService {
+        if (this._service == null) {
+            this._service = new StatusService();
+          }
+          return this._service;
     }
 };

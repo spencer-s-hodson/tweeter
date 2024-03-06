@@ -2,7 +2,7 @@ import "./PostStatus.css";
 import { useState } from "react";
 import useToastListener from "../toaster/ToastListenerHook";
 import useUserInfo from "../Hooks/userInfoHook";
-import { PostPresenter, PostView } from "../../presenter/PostPresenter";
+import { PostStatusPresenter, PostStatusView } from "../../presenter/PostStatusPresenter";
 
 const PostStatus = () => {
   const { displayErrorMessage, displayInfoMessage, clearLastInfoMessage } =
@@ -11,21 +11,24 @@ const PostStatus = () => {
   const { currentUser, authToken } = useUserInfo();
   const [post, setPost] = useState("");
 
-  const listener: PostView = {
+  const listener: PostStatusView = {
     displayInfoMessage: displayInfoMessage,
     clearLastInfoMessage: clearLastInfoMessage,
     displayErrorMessage: displayErrorMessage,
     setPost: setPost
   }
 
-  const [presenter] = useState(new PostPresenter(listener));
+  const [presenter] = useState(new PostStatusPresenter(listener));
 
   const submitPost = async (event: React.MouseEvent) => {
-    presenter.submitPost(event, post, currentUser!, authToken!)
+    event.preventDefault();
+
+    presenter.submitPost(post, currentUser!, authToken!)
   };
 
   const clearPost = (event: React.MouseEvent) => {
-    presenter.clearPost(event);
+    event.preventDefault();
+    presenter.clearPost();
   };
 
   const checkButtonStatus: () => boolean = () => {

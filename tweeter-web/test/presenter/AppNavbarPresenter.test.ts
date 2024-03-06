@@ -1,4 +1,4 @@
-import { instance, mock, verify, spy, when, anything } from "ts-mockito";  // make sure this is ts-mockito when writing tests
+import { instance, mock, verify, spy, when, anything, capture } from "ts-mockito";  // make sure this is ts-mockito when writing tests
 import { AppNavbarView, AppNavbarPresenter } from "../../src/presenter/AppNavbarPresenter";
 import { AuthToken } from "tweeter-shared";
 import { UserService } from "../../src/model/service/UserService";
@@ -22,7 +22,6 @@ describe("AppNavbarPresenter", () => {
     
     when(appNavbarPresenterSpy.service).thenReturn(mockUserServiceInstance);
   })
-
 
   /**
    * The presenter tells the view to display a logging out message.
