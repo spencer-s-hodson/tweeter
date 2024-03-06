@@ -1,4 +1,4 @@
-import { instance, mock, verify, spy, when, capture, anything } from "ts-mockito";  // make sure this is ts-mockito when writing tests
+import { instance, mock, verify, spy, when, anything } from "ts-mockito";  // make sure this is ts-mockito when writing tests
 import { AppNavbarView, AppNavbarPresenter } from "../../src/presenter/AppNavbarPresenter";
 import { AuthToken } from "tweeter-shared";
 import { UserService } from "../../src/model/service/UserService";
