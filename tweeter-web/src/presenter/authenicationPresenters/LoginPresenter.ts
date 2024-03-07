@@ -6,9 +6,9 @@ export class LoginPresenter extends AuthenticationPresenter {
     return !alias || !password;
   };
 
-  protected async getOperation(alias: string, password: string): Promise<[User, AuthToken]> {
-    return this.service.login(alias, password);
-  };
+  public async doLogin(alias: string, password: string, rememberMe: boolean, originalUrl: string) {
+    this.doAuthentication(() => this.service.login(alias, password), rememberMe, originalUrl)
+  }
 
   protected getItemDesription(): string {
     return "log user in"

@@ -11,6 +11,7 @@ import { AuthenticationView } from "../../../presenter/authenicationPresenters/A
 
 interface Props {
   originalUrl?: string;
+  presenter?: LoginPresenter;
 }
 
 const Login = (props: Props) => {
@@ -31,14 +32,14 @@ const Login = (props: Props) => {
     displayErrorMessage: displayErrorMessage
   }
 
-  const [presenter] = useState(new LoginPresenter(listener));
+  const [presenter] = useState(props.presenter ?? new LoginPresenter(listener));  // ?? = if null or undefined, do this thing
 
   const checkSubmitButtonStatus = (): boolean => {
     return presenter.checkSubmitButtonStatus(alias, password);
   };
 
   const doLogin = async () => {
-    presenter.doAuthentication(alias!, password!, rememberMeRef.current, props.originalUrl);
+    presenter.doLogin(alias!, password!, rememberMeRef.current, props.originalUrl!);
   };
 
   const inputFieldGenerator = () => {

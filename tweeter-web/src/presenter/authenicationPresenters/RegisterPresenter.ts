@@ -44,9 +44,9 @@ export class RegisterPresenter extends AuthenticationPresenter {
     return !firstName || !lastName || !alias || !password || !imageUrl;
   };
 
-  protected async getOperation(alias: string, password: string, firstName: string, lastName: string, imageBytes: Uint8Array): Promise<[User, AuthToken]> {
-    return this.service.register(firstName, lastName, alias, password, imageBytes);
-  };
+  public async doRegister(firstName: string, lastName: string, alias: string, password: string, userImageBytes: Uint8Array, rememberMe: boolean, originalUrl: string) {
+    this.doAuthentication(() => this.service.register(firstName, lastName, alias, password, userImageBytes), rememberMe, originalUrl )
+  }
 
   protected getItemDesription(): string {
     return "register user";

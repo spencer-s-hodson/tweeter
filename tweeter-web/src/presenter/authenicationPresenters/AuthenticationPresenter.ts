@@ -15,9 +15,9 @@ export abstract class AuthenticationPresenter extends Presenter {
     this._service = new UserService();
   };
 
-  public async doAuthentication(alias: string, password: string, rememberMe: boolean, firstName?: string, lastName?: string, imageBytes?: Uint8Array, url?: string): Promise<void> {
+  public async doAuthentication(operation: () => Promise<[User, AuthToken]>, rememberMe: boolean, url: string): Promise<void> {
     this.doFailureReportingOperation(async () => {
-      let [user, authToken] = await this.getOperation(alias, password, firstName, lastName, imageBytes);  // either service.login or service.register
+      const [user, authToken] = await operation();
 
       this.view.updateUserInfo(user, user, authToken, rememberMe);
 
@@ -30,8 +30,6 @@ export abstract class AuthenticationPresenter extends Presenter {
   };
 
   public abstract checkSubmitButtonStatus(alias: string, password: string, firstName?: string, lastName?: string, imageUrl?: string): boolean;
-
-  protected abstract getOperation(alias: string, password: string, firstName?: string, lastName?: string, imageBytes?: Uint8Array): Promise<[User, AuthToken]>;
 
   protected abstract getItemDesription(): string;
 
