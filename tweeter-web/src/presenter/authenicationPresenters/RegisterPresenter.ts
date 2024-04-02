@@ -40,6 +40,7 @@ export class RegisterPresenter extends AuthenticationPresenter {
     }
   };
 
+  // Register presenter
   public checkSubmitButtonStatus(alias: string, password: string, firstName: string, lastName: string, imageUrl: string): boolean {
     return !firstName || !lastName || !alias || !password || !imageUrl;
   };

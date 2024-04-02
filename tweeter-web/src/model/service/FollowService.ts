@@ -1,72 +1,48 @@
-import { AuthToken, FakeData, User } from "tweeter-shared";
+import { AuthToken, FakeData, FollowRequest, FollowResponse, GetFolloweesCountRequest, GetFolloweesCountResponse, GetFollowersCountRequest, GetFollowersCountResponse, GetIsFollowerStatusRequest, GetIsFollowerStatusResponse, LoadMoreFolloweesRequest, LoadMoreFolloweesResponse, LoadMoreFollowersRequest, LoadMoreFollowersResponse, UnfollowRequest, UnfollowResponse, User } from "tweeter-shared";
+import { ServerFacade } from "../net/ServerFacade";
 
 export class FollowService {
-  public async loadMoreFollowers(
-    authToken: AuthToken,
-    user: User,
-    pageSize: number,
-    lastItem: User | null
-  ): Promise<[User[], boolean]> {
-    // TODO: Replace with the result of calling server
-    return FakeData.instance.getPageOfUsers(lastItem, pageSize, user);
+  private serverFacade: ServerFacade = new ServerFacade();
+
+  public async loadMoreFollowers(authToken: AuthToken, user: User, pageSize: number, lastItem: User | null): Promise<[User[], boolean]> {
+    const req: LoadMoreFollowersRequest = new LoadMoreFollowersRequest(authToken, user, pageSize, lastItem);
+    const resp: LoadMoreFollowersResponse = await this.serverFacade.loadMoreFollowers(req);
+    return [resp.userItems, resp.hasMore];
   };
 
-  public async loadMoreFollowees(
-    authToken: AuthToken,
-    user: User,
-    pageSize: number,
-    lastItem: User | null
-  ): Promise<[User[], boolean]> {
-    // TODO: Replace with the result of calling server
-    return FakeData.instance.getPageOfUsers(lastItem, pageSize, user);
+  public async loadMoreFollowees(authToken: AuthToken, user: User, pageSize: number, lastItem: User | null): Promise<[User[], boolean]> {
+    const req: LoadMoreFolloweesRequest = new LoadMoreFolloweesRequest(authToken, user, pageSize, lastItem);
+    const resp: LoadMoreFolloweesResponse = await this.serverFacade.loadMoreFollowees(req);
+    return [resp.userItems, resp.hasMore];
   };
 
-  public async getIsFollowerStatus(
-    authToken: AuthToken,
-    user: User,
-    selectedUser: User
-  ): Promise<boolean> {
-    // TODO: Replace with the result of calling server
-    return FakeData.instance.isFollower();
+  public async getIsFollowerStatus(authToken: AuthToken, user: User, selectedUser: User): Promise<boolean> {
+    const req: GetIsFollowerStatusRequest = new GetIsFollowerStatusRequest(authToken, user, selectedUser);
+    const resp: GetIsFollowerStatusResponse = await this.serverFacade.getIsFollowerStatus(req);
+    return resp.isFollower;
   };
 
-  public async getFolloweesCount(
-    authToken: AuthToken,
-    user: User
-  ): Promise<number> {
-    // TODO: Replace with the result of calling server
-    return FakeData.instance.getFolloweesCount(user);
+  public async getFolloweesCount(authToken: AuthToken, user: User): Promise<number> {
+    const req: GetFolloweesCountRequest = new GetFolloweesCountRequest(authToken, user);
+    const resp: GetFolloweesCountResponse = await this.serverFacade.getFolloweesCount(req);
+    return resp.numOfFollowees;
   };
 
-  public async getFollowersCount(
-    authToken: AuthToken,
-    user: User
-  ): Promise<number> {
-    // TODO: Replace with the result of calling server
-    return FakeData.instance.getFollowersCount(user);
+  public async getFollowersCount(authToken: AuthToken, user: User): Promise<number> {
+    const req: GetFollowersCountRequest = new GetFollowersCountRequest(authToken, user);
+    const resp: GetFollowersCountResponse = await this.serverFacade.getFollowersCount(req);
+    return resp.numOfFollowers;
   };
 
   public async follow(authToken: AuthToken, userToFollow: User): Promise<[followersCount: number, followeesCount: number]> {
-    // Pause so we can see the following message. Remove when connected to the server
-    await new Promise((f) => setTimeout(f, 2000));
-
-    // TODO: Call the server
-
-    let followersCount = await this.getFollowersCount(authToken, userToFollow);
-    let followeesCount = await this.getFolloweesCount(authToken, userToFollow);
-
-    return [followersCount, followeesCount];
+    const req: FollowRequest = new FollowRequest(authToken, userToFollow);
+    const resp: FollowResponse = await this.serverFacade.follow(req);
+    return [resp.followersCount, resp.followeesCount];
   };
 
   public async unfollow(authToken: AuthToken, userToUnfollow: User): Promise<[followersCount: number, followeesCount: number]> {
-    // Pause so we can see the unfollowing message. Remove when connected to the server
-    await new Promise((f) => setTimeout(f, 2000));
-
-    // TODO: Call the server
-
-    let followersCount = await this.getFollowersCount(authToken, userToUnfollow);
-    let followeesCount = await this.getFolloweesCount(authToken, userToUnfollow);
-
-    return [followersCount, followeesCount];
+    const req: UnfollowRequest = new UnfollowRequest(authToken, userToUnfollow);
+    const resp: UnfollowResponse = await this.serverFacade.unfollow(req);
+    return [resp.followersCount, resp.followeesCount];
   };
 }

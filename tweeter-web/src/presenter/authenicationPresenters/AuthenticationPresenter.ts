@@ -29,6 +29,7 @@ export abstract class AuthenticationPresenter extends Presenter {
     }, this.getItemDesription());
   };
 
+  // Authentication Presenter
   public abstract checkSubmitButtonStatus(alias: string, password: string, firstName?: string, lastName?: string, imageUrl?: string): boolean;
 
   protected abstract getItemDesription(): string;

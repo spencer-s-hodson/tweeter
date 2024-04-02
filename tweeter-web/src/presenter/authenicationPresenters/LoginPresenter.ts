@@ -1,7 +1,7 @@
-import { AuthToken, User } from "tweeter-shared";
 import { AuthenticationPresenter } from "./AuthenticationPresenter";
 
 export class LoginPresenter extends AuthenticationPresenter {
+  // Login Presenter
   public checkSubmitButtonStatus(alias: string, password: string) {
     return !alias || !password;
   };
