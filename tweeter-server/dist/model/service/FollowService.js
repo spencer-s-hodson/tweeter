@@ -11,18 +11,62 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FollowService = void 0;
 const tweeter_shared_1 = require("tweeter-shared");
-class FollowService {
+const Service_1 = require("./Service");
+const Factory_1 = require("../../factory/Factory");
+class FollowService extends Service_1.Service {
+    constructor() {
+        super();
+        this.followsDAO = Factory_1.Factory.factory.getFollowsDAO();
+    }
     loadMoreFollowers(request) {
         return __awaiter(this, void 0, void 0, function* () {
-            const [usersItem, hasMore] = tweeter_shared_1.FakeData.instance.getPageOfUsers(request.lastItem, request.pageSize, request.user);
-            return new tweeter_shared_1.LoadMoreFollowersResponse(true, "successfully loaded more followers", usersItem, hasMore);
+            // // make sure the request is okay
+            // if (request.user == null || request.authToken == null) {
+            //   throw new Error("Bad Request");
+            // }
+            // validate the authToken
+            this.isValidAuthToken(request.authToken);
+            // // no shot this is actually right lol
+            // const stuff: DataPage<Follows> = await this.followsDAO.getPageOfFollowers(request.user.alias, request.pageSize, request.lastItem?.alias);
+            // const followsItems = stuff.items;  // interface to make this users?
+            // const hasMore = stuff.hasMorePages;
+            // // getUser requires an alias and an authToken (is okay to do though?) (I think so?)
+            // let users: User[] = []
+            // for (let followsItem of followsItems) {
+            //   // we are getting the followers so we get user by followerHandle
+            //   const user: User | null = await Factory.factory.getUserDAO().getUser(followsItem.followerHandle)
+            //   if (user == null) {
+            //     throw new Error("This user does not exist!")
+            //   }
+            //   users.push(user);
+            // }
+            if (request.authToken == null) {
+                throw new Error("Auth Error: Invalid auth token");
+            }
+            if (request.user == null) {
+                throw new Error("Bad Request: User not found");
+            }
+            const [userItems, hasMore] = tweeter_shared_1.FakeData.instance.getPageOfUsers(request.lastItem, request.pageSize, request.user);
+            if (userItems == null || hasMore == null) {
+                throw new Error("Internal Server Error: Something went wrong when connecting to the database");
+            }
+            return new tweeter_shared_1.LoadMoreFollowersResponse(true, "successfully loaded more followers", userItems, hasMore);
         });
     }
     ;
     loadMoreFollowees(request) {
         return __awaiter(this, void 0, void 0, function* () {
-            const [usersItem, hasMore] = tweeter_shared_1.FakeData.instance.getPageOfUsers(request.lastItem, request.pageSize, request.user);
-            return new tweeter_shared_1.LoadMoreFolloweesResponse(true, "successfully loaded more followers", usersItem, hasMore);
+            if (request.authToken == null) {
+                throw new Error("Auth Error: Invalid auth token");
+            }
+            if (request.user == null) {
+                throw new Error("Bad Request: User not found");
+            }
+            const [userItems, hasMore] = tweeter_shared_1.FakeData.instance.getPageOfUsers(request.lastItem, request.pageSize, request.user);
+            if (userItems == null || hasMore == null) {
+                throw new Error("Internal Server Error: Something went wrong when connecting to the database");
+            }
+            return new tweeter_shared_1.LoadMoreFolloweesResponse(true, "successfully loaded more followers", userItems, hasMore);
         });
     }
     ;

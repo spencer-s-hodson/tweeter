@@ -48,6 +48,7 @@ export class ServerFacade {
     const endpoint = "/auth/register";
     const response: AuthenticateResponse = await this.clientCommunicator.doPost<RegisterRequest, AuthenticateResponse>(request, endpoint);
     return AuthenticateResponse.fromJson(response);
+   
   }
 
   async logut(request: LogoutRequest): Promise<LogoutResponse> {

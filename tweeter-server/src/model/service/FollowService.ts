@@ -1,20 +1,60 @@
-import { FakeData, FollowRequest, FollowResponse, GetFolloweesCountRequest, GetFolloweesCountResponse, GetFollowersCountRequest, GetFollowersCountResponse, GetIsFollowerStatusRequest, GetIsFollowerStatusResponse, LoadMoreFolloweesRequest, LoadMoreFolloweesResponse, LoadMoreFollowersRequest, LoadMoreFollowersResponse, UnfollowRequest, UnfollowResponse } from "tweeter-shared";
+import { FakeData, FollowRequest, FollowResponse, GetFolloweesCountRequest, GetFolloweesCountResponse, GetFollowersCountRequest, GetFollowersCountResponse, GetIsFollowerStatusRequest, GetIsFollowerStatusResponse, LoadMoreFolloweesRequest, LoadMoreFolloweesResponse, LoadMoreFollowersRequest, LoadMoreFollowersResponse, UnfollowRequest, UnfollowResponse, User } from "tweeter-shared";
+import { Service } from "./Service";
+import { FollowsDAO } from "../../dao/interfaces/FollowsDAO";
+import { Factory } from "../../factory/Factory";
+import { DataPage } from "../../entity/DataPage";
+import { Follows } from "../../entity/Follows";
 
-export class FollowService {
+export class FollowService extends Service {
+  private followsDAO: FollowsDAO;
+
+  public constructor() {
+    super()
+    this.followsDAO = Factory.factory.getFollowsDAO();
+  }
+
+  // MAKE SURE THIS RECURSES
   public async loadMoreFollowers(request: LoadMoreFollowersRequest): Promise<LoadMoreFollowersResponse> {
-    if (request.authToken == null) {
-      throw new Error("Auth Error: Invalid auth token");
-    }
-    if (request.user == null) {
-      throw new Error("Bad Request: User not found")
+    // make sure the request is okay
+    if (request.user == null || request.authToken == null) {
+      throw new Error("Bad Request");
     }
 
-    const [userItems, hasMore] = FakeData.instance.getPageOfUsers(request.lastItem, request.pageSize, request.user);
-    if (userItems == null || hasMore == null) {
-      throw new Error("Internal Server Error: Something went wrong when connecting to the database")
-    }   
+    // validate the authToken
+    if (!this.isValidAuthToken(request.authToken)) {
+      throw new Error("Session Expired, please logout and log back in");
+    }
 
-    return new LoadMoreFollowersResponse(true, "successfully loaded more followers", userItems, hasMore);
+    // no shot this is actually right lol
+    const stuff: DataPage<Follows> = await this.followsDAO.getPageOfFollowers(request.user.alias, request.pageSize, request.lastItem?.alias);
+    const followsItems = stuff.items;
+    const hasMore = stuff.hasMorePages;
+
+    let users: User[] = []
+    for (let followsItem of followsItems) {
+      // we are getting the followers so we get user by followerHandle
+      const user: User | null = await Factory.factory.getUserDAO().getUser(followsItem.followerHandle)  // does this violate anything?
+      if (user == null) {
+        throw new Error("This user does not exist!")
+      }
+      users.push(user);
+    }
+
+
+
+    // if (request.authToken == null) {
+    //   throw new Error("Auth Error: Invalid auth token");
+    // }
+    // if (request.user == null) {
+    //   throw new Error("Bad Request: User not found")
+    // }
+
+    // const [userItems, hasMore] = FakeData.instance.getPageOfUsers(request.lastItem, request.pageSize, request.user);
+    // if (userItems == null || hasMore == null) {
+    //   throw new Error("Internal Server Error: Something went wrong when connecting to the database")
+    // }   
+
+    return new LoadMoreFollowersResponse(true, "successfully loaded more followers", users, hasMore);
   };
 
   public async loadMoreFollowees(request: LoadMoreFolloweesRequest): Promise<LoadMoreFolloweesResponse> {

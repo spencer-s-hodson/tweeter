@@ -15,6 +15,12 @@ export class UserService {
     // Not neded now, but will be needed when you make the request to the server in milestone 3
     let imageStringBase64: string =
       Buffer.from(userImageBytes).toString("base64");
+    
+    console.log("First Name Web: " + firstName);
+    console.log("Last Name Web: " + lastName);
+    console.log("Alias Web: " + alias);
+    console.log("Image Web: " + imageStringBase64);
+    
     const req: RegisterRequest = new RegisterRequest(firstName, lastName, alias, password, imageStringBase64);
     const resp: AuthenticateResponse = await this.serverFacade.register(req);
     return [resp.user, resp.authToken];

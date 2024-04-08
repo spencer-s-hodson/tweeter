@@ -10,8 +10,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.registerHandler = void 0;
+const tweeter_shared_1 = require("tweeter-shared");
 const UserService_1 = require("../model/service/UserService");
 const registerHandler = (event) => __awaiter(void 0, void 0, void 0, function* () {
-    return new UserService_1.UserService().register(event);
+    const deserializedEvent = tweeter_shared_1.RegisterRequest.fromJson(event);
+    return new UserService_1.UserService().register(deserializedEvent);
 });
 exports.registerHandler = registerHandler;

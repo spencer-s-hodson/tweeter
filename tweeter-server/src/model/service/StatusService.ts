@@ -1,6 +1,13 @@
 import { FakeData, LoadMoreFeedItemsRequest, LoadMoreFeedItemsResponse, LoadMoreStoryItemsRequest, LoadMoreStoryItemsResponse, PostStatusRequest, PostStatusResponse } from "tweeter-shared";
+import { Service } from "./Service";
 
-export class StatusService {
+export class StatusService extends Service {
+  // DAO's go up here
+  
+  public constructor() {
+    super();
+  }
+
   public async loadMoreFeedItems(request: LoadMoreFeedItemsRequest): Promise<LoadMoreFeedItemsResponse> {
     if (request.authToken == null) {
       throw new Error("Auth Error: Invalid auth token");
