@@ -72,7 +72,7 @@ export class DynamoFollowsDAO extends DAO implements FollowsDAO {
 
   public async getPageOfFollowees(follower_handle: string, page_size: number, last_followee_handle: string | undefined): Promise<DataPage<Follows>> {
     follower_handle = this.addAtSymbol(follower_handle);
-    last_followee_handle = this.addAtSymbol(last_followee_handle);
+    // last_followee_handle = this.addAtSymbol(last_followee_handle);
     const params = {
       TableName: this.tableName,
       KeyConditionExpression: 'follower_handle = :fh',
