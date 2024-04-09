@@ -4,13 +4,16 @@ import { FollowsDAO } from "../../dao/interfaces/FollowsDAO";
 import { Factory } from "../../factory/Factory";
 import { DataPage } from "../../entity/DataPage";
 import { Follows } from "../../entity/Follows";
+import { UserDAO } from "../../dao/interfaces/UserDAO";
 
 export class FollowService extends Service {
   private followsDAO: FollowsDAO;
+  private userDAO: UserDAO;
 
   public constructor() {
     super()
     this.followsDAO = Factory.factory.getFollowsDAO();
+    this.userDAO = Factory.factory.getUserDAO();
   }
 
   // MAKE SURE THIS RECURSES
@@ -27,18 +30,34 @@ export class FollowService extends Service {
 
     // no shot this is actually right lol
     const stuff: DataPage<Follows> = await this.followsDAO.getPageOfFollowers(request.user.alias, request.pageSize, request.lastItem?.alias);
+    
+    console.log("Stuff: " + JSON.stringify(stuff));
+    
     const followsItems = stuff.items;
     const hasMore = stuff.hasMorePages;
 
+    console.log("Follow Items: " + JSON.stringify(followsItems));
+    console.log("Has More: " + JSON.stringify(hasMore));
+
     let users: User[] = []
     for (let followsItem of followsItems) {
+      // parse followsItem
+      const item: Follows = this.parseFollows(followsItem);
+
+      // DEBUG
+      console.log("Follows After Parsing: " + item);
+
       // we are getting the followers so we get user by followerHandle
-      const user: User | null = await Factory.factory.getUserDAO().getUser(followsItem.followerHandle)  // does this violate anything?
+      // problem: this is return the shape of a dyamo user (put these functions in the DAO's!)
+      const user: User | null = await this.userDAO.getUser(item.follower_handle)  // does this violate anything?
+      console.log("THE USER: " + JSON.stringify(user));
       if (user == null) {
         throw new Error("This user does not exist!")
       }
       users.push(user);
     }
+
+    console.log("USERS: " + JSON.stringify(users));
 
 
 
@@ -104,4 +123,25 @@ export class FollowService extends Service {
 
     return new UnfollowResponse(true, "successfully followed a user", followeesCountResponse.numOfFollowees, followersCountResponse.numOfFollowers);
   };
+
+
+  private parseFollows(follows: Follows) {
+    // this needs to match what the incoming object looks like (idk why this is backwards)
+    interface IFollows {
+      followee_handle: string
+      followee_name: string
+      follower_handle: string
+      follower_name: string
+    }
+
+    const myObj: IFollows = follows as unknown as IFollows;
+
+    // this needs to match the constructor of the Follows class
+    return new Follows(
+      myObj.follower_handle,
+      myObj.follower_name,
+      myObj.followee_handle,
+      myObj.followee_name
+    )
+  }
 }

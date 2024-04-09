@@ -6,11 +6,12 @@ class Service {
     constructor() {
         this.authDAO = Factory_1.Factory.factory.getAuthDAO();
     }
-    // TODO
     isValidAuthToken(authToken) {
         const timeDifference = Date.now() - authToken.timestamp;
-        console.log(timeDifference);
-        // if time difference greater than something, return false
+        // 20 minutes
+        if (timeDifference >= 120000) {
+            return false;
+        }
         return true;
     }
 }

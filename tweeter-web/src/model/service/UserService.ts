@@ -1,12 +1,11 @@
 import { Buffer } from "buffer";
 import { AuthToken, AuthenticateResponse, GetUserRequest, GetUserResponse, LoginRequest, LogoutRequest, LogoutResponse, RegisterRequest, User } from "tweeter-shared";
 import { ServerFacade } from "../net/ServerFacade";
+import { Service } from "./Service";
 
-export class UserService {
-  private serverFacade: ServerFacade = new ServerFacade();
-
+export class UserService extends Service{
   public async login(alias: string, password: string): Promise<[User, AuthToken]> {
-    const req: LoginRequest = new LoginRequest(alias, password);
+    const req: LoginRequest = new LoginRequest(this.addAt(alias), password);
     const resp: AuthenticateResponse = await this.serverFacade.login(req);
     return [resp.user, resp.authToken];
   };
@@ -16,12 +15,7 @@ export class UserService {
     let imageStringBase64: string =
       Buffer.from(userImageBytes).toString("base64");
     
-    console.log("First Name Web: " + firstName);
-    console.log("Last Name Web: " + lastName);
-    console.log("Alias Web: " + alias);
-    console.log("Image Web: " + imageStringBase64);
-    
-    const req: RegisterRequest = new RegisterRequest(firstName, lastName, alias, password, imageStringBase64);
+    const req: RegisterRequest = new RegisterRequest(firstName, lastName, this.addAt(alias), password, imageStringBase64);
     const resp: AuthenticateResponse = await this.serverFacade.register(req);
     return [resp.user, resp.authToken];
   };
@@ -32,7 +26,7 @@ export class UserService {
   };
 
   public async getUser(authToken: AuthToken, alias: string): Promise<User | null> {
-    const req: GetUserRequest = new GetUserRequest(authToken, alias);
+    const req: GetUserRequest = new GetUserRequest(authToken, this.addAt(alias));
     const resp: GetUserResponse = await this.serverFacade.getUser(req);
     return resp.user;
   };

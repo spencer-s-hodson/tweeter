@@ -1,9 +1,8 @@
 import { AuthToken, FakeData, FollowRequest, FollowResponse, GetFolloweesCountRequest, GetFolloweesCountResponse, GetFollowersCountRequest, GetFollowersCountResponse, GetIsFollowerStatusRequest, GetIsFollowerStatusResponse, LoadMoreFolloweesRequest, LoadMoreFolloweesResponse, LoadMoreFollowersRequest, LoadMoreFollowersResponse, UnfollowRequest, UnfollowResponse, User } from "tweeter-shared";
 import { ServerFacade } from "../net/ServerFacade";
+import { Service } from "./Service";
 
-export class FollowService {
-  private serverFacade: ServerFacade = new ServerFacade();
-
+export class FollowService extends Service {
   public async loadMoreFollowers(authToken: AuthToken, user: User, pageSize: number, lastItem: User | null): Promise<[User[], boolean]> {
     const req: LoadMoreFollowersRequest = new LoadMoreFollowersRequest(authToken, user, pageSize, lastItem);
     const resp: LoadMoreFollowersResponse = await this.serverFacade.loadMoreFollowers(req);

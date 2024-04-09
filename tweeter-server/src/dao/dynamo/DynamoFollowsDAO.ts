@@ -105,7 +105,7 @@ export class DynamoFollowsDAO extends DAO implements FollowsDAO {
     };
   
     const result = await this.client.send(new QueryCommand(params));
-    const items = result.Items as Follows[];
+    const items = result.Items as Follows[]; // replace this
     const lastKey = result.LastEvaluatedKey ? result.LastEvaluatedKey.follower_handle : undefined;
   
     return new DataPage<Follows>(items, lastKey);
@@ -118,5 +118,25 @@ export class DynamoFollowsDAO extends DAO implements FollowsDAO {
     else {
       return "@" + handle;
     }
+  }
+
+  private parseFollows(follows: Follows) {
+    // this needs to match what the incoming object looks like (idk why this is backwards)
+    interface IFollows {
+      followee_handle: string
+      followee_name: string
+      follower_handle: string
+      follower_name: string
+    }
+
+    const myObj: IFollows = follows as unknown as IFollows;
+
+    // this needs to match the constructor of the Follows class
+    return new Follows(
+      myObj.follower_handle,
+      myObj.follower_name,
+      myObj.followee_handle,
+      myObj.followee_name
+    )
   }
 }

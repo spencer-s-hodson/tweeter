@@ -2,17 +2,15 @@ import SHA256 from "crypto-js/sha256";
 import { AuthToken, AuthenticateResponse, GetUserRequest, GetUserResponse, LoginRequest, LogoutRequest, LogoutResponse, RegisterRequest, User } from "tweeter-shared";
 import { Factory } from "../../factory/Factory";
 import { UserDAO } from "../../dao/interfaces/UserDAO";
-import { AuthDAO } from "../../dao/interfaces/AuthDAO";
 import { Service } from "./Service";
+import { ExistingObjectReplicationStatus } from "@aws-sdk/client-s3";
 
 export class UserService extends Service {
   private userDAO: UserDAO;
-  // private authDAO: AuthDAO;
 
   public constructor() {
     super();
     this.userDAO = Factory.factory.getUserDAO();
-    // this.authDAO = Factory.factory.getAuthDAO();
   }
 
   public async login(request: LoginRequest): Promise<AuthenticateResponse> {
@@ -28,15 +26,21 @@ export class UserService extends Service {
     }
 
     // create user and authToken
-    const user = this.dynamoUserToUser(existingUser);
+    // const user = this.dynamoUserToUser(existingUser);
     const authToken = AuthToken.Generate();
 
     // put authToken in table
     await this.authDAO.putAuth(authToken.token, authToken.timestamp);
 
     // return a login response
-    return new AuthenticateResponse(true, `Successfully logged in ${existingUser.firstName}.`, user, authToken);
+    return new AuthenticateResponse(true, `Successfully logged in ${existingUser.firstName}.`, existingUser, authToken);
   };
+
+
+
+
+
+
 
 
   // TODO: make sure the right error message is getting thrown
@@ -47,10 +51,13 @@ export class UserService extends Service {
     }
 
     // check if the user already exists
+    console.log(request.alias);
     const existingUser: User | null = await this.userDAO.getUser(request.alias);
     if (existingUser != null) {
       throw new Error("User already exists in DB!");  // should this return a bad AuthenticateResponse instead?
     }
+
+    console.log("EXISTING USER: JSON.stringify(existingUser)");
 
     // hash the password
     const hashedPassword = UserService.hashPassword(request.password);
@@ -60,9 +67,11 @@ export class UserService extends Service {
 
     // put the user in the DB
     await this.userDAO.putUser(request.alias, hashedPassword, request.firstName, request.lastName, image_url);
-
+    // await this.initialize();
+    
     // create a user and authToken if all of this worked
     const user = new User(request.firstName, request.lastName, request.alias, image_url);
+    console.log("USER I CREATE: " + JSON.stringify(user));
     const authToken = AuthToken.Generate();
 
     // put the authToken in table
@@ -84,6 +93,12 @@ export class UserService extends Service {
     return new LogoutResponse(true, "successfuly logged user out");
   };
 
+
+
+
+
+
+
   // test this
   public async getUser(request: GetUserRequest): Promise<GetUserResponse> {
     // make sure the request is good
@@ -98,31 +113,48 @@ export class UserService extends Service {
     }
 
     // get the user
-    const dynamoUser: User | null = await this.userDAO.getUser(request.alias);
-    if (dynamoUser == null) {
+    const user: User | null = await this.userDAO.getUser(request.alias);
+    console.log("GOTTEN USER: " + user);
+    if (user == null) {
       return new GetUserResponse(false, "couldn't find user", null);
     }
     else {
-      const actualUser = this.dynamoUserToUser(dynamoUser);
-      return new GetUserResponse(true, "successfully found user", actualUser);
+      // const actualUser = this.dynamoUserToUser(dynamoUser);
+      return new GetUserResponse(true, "successfully found user", user);
     }
   };
 
   // converts a dynamo user to a User object
-  private dynamoUserToUser(user: User) {
-    interface DyanmoUser {
-      user_last_name: string,
-      user_first_name: string
-      user_alias: string
-      user_password: string
-      user_image: string
-    }
-    const dyanmoUser: DyanmoUser = user as unknown as DyanmoUser;
-    return new User(dyanmoUser.user_first_name, dyanmoUser.user_last_name, dyanmoUser.user_alias, dyanmoUser.user_image); 
-  }
+  // private dynamoUserToUser(user: User) {
+  //   interface DyanmoUser {
+  //     user_last_name: string,
+  //     user_first_name: string
+  //     user_alias: string
+  //     user_password: string
+  //     user_image: string
+  //   }
+  //   const dyanmoUser: DyanmoUser = user as unknown as DyanmoUser;
+  //   return new User(dyanmoUser.user_first_name, dyanmoUser.user_last_name, dyanmoUser.user_alias, dyanmoUser.user_image);
+  // }
 
   // hashs the password
   private static hashPassword(password: string): string {
     return SHA256(password).toString();
   }
+
+  // // not getting initialized
+  // private async initialize() {
+  //   // await this.userDAO.putUser(request.alias, hashedPassword, request.firstName, request.lastName, image_url);
+
+  //   // add user0 - user24 with put command
+  //   for (let i = 0; i < 25; i++) {
+  //     await this.userDAO.putUser(
+  //       `@User${i}`, // alias
+  //       "a",        // password
+  //       "User",     // first name
+  //       `${i}`,          // last name
+  //       "https://my-tweeter-bucket.s3.us-west-2.amazonaws.com/image/thousand-yard-stare-1000-yard-stare.png"  // image url
+  //     );
+  //   }
+  // }
 }

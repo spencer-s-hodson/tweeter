@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DynamoFollowsDAO = void 0;
 const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
+const Follows_1 = require("../../entity/Follows");
 const DataPage_1 = require("../../entity/DataPage");
 const DAO_1 = require("../DAO"); // this doesn't so anything as of right now
 class DynamoFollowsDAO extends DAO_1.DAO {
@@ -22,6 +23,8 @@ class DynamoFollowsDAO extends DAO_1.DAO {
     // private readonly client = DynamoDBDocumentClient.from(new DynamoDBClient({ region: "us-west-2" }));  // the example code didn't put the region why do i
     putItem(follower_handle, follower_name, followee_handle, followee_name) {
         return __awaiter(this, void 0, void 0, function* () {
+            follower_handle = this.addAtSymbol(follower_handle);
+            followee_handle = this.addAtSymbol(followee_handle);
             const item = {
                 follower_handle,
                 follower_name,
@@ -33,6 +36,8 @@ class DynamoFollowsDAO extends DAO_1.DAO {
     }
     getItem(follower_handle, followee_handle) {
         return __awaiter(this, void 0, void 0, function* () {
+            follower_handle = this.addAtSymbol(follower_handle);
+            followee_handle = this.addAtSymbol(followee_handle);
             const key = {
                 follower_handle,
                 followee_handle
@@ -43,6 +48,8 @@ class DynamoFollowsDAO extends DAO_1.DAO {
     }
     updateItem(follower_handle, followee_handle, new_follower_name, new_followee_name) {
         return __awaiter(this, void 0, void 0, function* () {
+            follower_handle = this.addAtSymbol(follower_handle);
+            followee_handle = this.addAtSymbol(followee_handle);
             const params = {
                 TableName: this.tableName,
                 Key: {
@@ -60,6 +67,8 @@ class DynamoFollowsDAO extends DAO_1.DAO {
     }
     deleteItem(follower_handle, followee_handle) {
         return __awaiter(this, void 0, void 0, function* () {
+            follower_handle = this.addAtSymbol(follower_handle);
+            followee_handle = this.addAtSymbol(followee_handle);
             const params = {
                 TableName: this.tableName,
                 Key: {
@@ -72,6 +81,8 @@ class DynamoFollowsDAO extends DAO_1.DAO {
     }
     getPageOfFollowees(follower_handle, page_size, last_followee_handle) {
         return __awaiter(this, void 0, void 0, function* () {
+            follower_handle = this.addAtSymbol(follower_handle);
+            // last_followee_handle = this.addAtSymbol(last_followee_handle);
             const params = {
                 TableName: this.tableName,
                 KeyConditionExpression: 'follower_handle = :fh',
@@ -102,10 +113,23 @@ class DynamoFollowsDAO extends DAO_1.DAO {
                 ExclusiveStartKey: last_follower_handle ? { followee_handle: followee_handle, follower_handle: last_follower_handle } : undefined,
             };
             const result = yield this.client.send(new lib_dynamodb_1.QueryCommand(params));
-            const items = result.Items;
+            const items = result.Items; // replace this
             const lastKey = result.LastEvaluatedKey ? result.LastEvaluatedKey.follower_handle : undefined;
             return new DataPage_1.DataPage(items, lastKey);
         });
+    }
+    addAtSymbol(handle) {
+        if (handle[0] == "@") {
+            return handle;
+        }
+        else {
+            return "@" + handle;
+        }
+    }
+    parseFollows(follows) {
+        const myObj = follows;
+        // this needs to match the constructor of the Follows class
+        return new Follows_1.Follows(myObj.follower_handle, myObj.follower_name, myObj.followee_handle, myObj.followee_name);
     }
 }
 exports.DynamoFollowsDAO = DynamoFollowsDAO;

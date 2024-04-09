@@ -1,31 +1,13 @@
 export class Follows {
-  public followerHandle: string
-  public followerName: string
-  public followeeHandle: string
-  public followeeName: string
-
-  constructor(followerHandle: string, followerName: string, followeeHandle: string, followeeName: string) {
-    this.followerHandle = followerHandle;
-    this.followerName = followerName;
-    this.followeeHandle = followeeHandle;
-    this.followeeName = followeeName;
-  }
-
-  toString(): string {
-    return (
-      "Follows {" +
-      "followerHandle='" +
-      this.followerHandle +
-      "'" +
-      ", followerName='" +
-      this.followeeName +
-      "'" +
-      ", followeeHandle=" +
-      this.followeeHandle +
-      "'" +
-      ", followeeName=" +
-      this.followeeName +
-      "}"
-    );
+  public follower_handle: string
+  public follower_name: string
+  public followee_handle: string
+  public followee_name: string
+  
+  constructor(follower_handle: string, follower_name: string, followee_handle: string, followee_name: string) {
+    this.follower_handle = follower_handle;
+    this.follower_name = follower_name;
+    this.followee_handle = followee_handle;
+    this.followee_name = followee_name;
   }
 }

@@ -13,44 +13,59 @@ exports.FollowService = void 0;
 const tweeter_shared_1 = require("tweeter-shared");
 const Service_1 = require("./Service");
 const Factory_1 = require("../../factory/Factory");
+const Follows_1 = require("../../entity/Follows");
 class FollowService extends Service_1.Service {
     constructor() {
         super();
         this.followsDAO = Factory_1.Factory.factory.getFollowsDAO();
+        this.userDAO = Factory_1.Factory.factory.getUserDAO();
     }
+    // MAKE SURE THIS RECURSES
     loadMoreFollowers(request) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            // // make sure the request is okay
-            // if (request.user == null || request.authToken == null) {
-            //   throw new Error("Bad Request");
-            // }
+            // make sure the request is okay
+            if (request.user == null || request.authToken == null) {
+                throw new Error("Bad Request");
+            }
             // validate the authToken
-            this.isValidAuthToken(request.authToken);
-            // // no shot this is actually right lol
-            // const stuff: DataPage<Follows> = await this.followsDAO.getPageOfFollowers(request.user.alias, request.pageSize, request.lastItem?.alias);
-            // const followsItems = stuff.items;  // interface to make this users?
-            // const hasMore = stuff.hasMorePages;
-            // // getUser requires an alias and an authToken (is okay to do though?) (I think so?)
-            // let users: User[] = []
-            // for (let followsItem of followsItems) {
-            //   // we are getting the followers so we get user by followerHandle
-            //   const user: User | null = await Factory.factory.getUserDAO().getUser(followsItem.followerHandle)
-            //   if (user == null) {
-            //     throw new Error("This user does not exist!")
-            //   }
-            //   users.push(user);
+            if (!this.isValidAuthToken(request.authToken)) {
+                throw new Error("Session Expired, please logout and log back in");
+            }
+            // no shot this is actually right lol
+            const stuff = yield this.followsDAO.getPageOfFollowers(request.user.alias, request.pageSize, (_a = request.lastItem) === null || _a === void 0 ? void 0 : _a.alias);
+            console.log("Stuff: " + JSON.stringify(stuff));
+            const followsItems = stuff.items;
+            const hasMore = stuff.hasMorePages;
+            console.log("Follow Items: " + JSON.stringify(followsItems));
+            console.log("Has More: " + JSON.stringify(hasMore));
+            let users = [];
+            for (let followsItem of followsItems) {
+                // parse followsItem
+                const item = this.parseFollows(followsItem);
+                // DEBUG
+                console.log("Follows After Parsing: " + item);
+                // we are getting the followers so we get user by followerHandle
+                // problem: this is return the shape of a dyamo user (put these functions in the DAO's!)
+                const user = yield this.userDAO.getUser(item.follower_handle); // does this violate anything?
+                console.log("THE USER: " + JSON.stringify(user));
+                if (user == null) {
+                    throw new Error("This user does not exist!");
+                }
+                users.push(user);
+            }
+            console.log("USERS: " + JSON.stringify(users));
+            // if (request.authToken == null) {
+            //   throw new Error("Auth Error: Invalid auth token");
             // }
-            if (request.authToken == null) {
-                throw new Error("Auth Error: Invalid auth token");
-            }
-            if (request.user == null) {
-                throw new Error("Bad Request: User not found");
-            }
-            const [userItems, hasMore] = tweeter_shared_1.FakeData.instance.getPageOfUsers(request.lastItem, request.pageSize, request.user);
-            if (userItems == null || hasMore == null) {
-                throw new Error("Internal Server Error: Something went wrong when connecting to the database");
-            }
-            return new tweeter_shared_1.LoadMoreFollowersResponse(true, "successfully loaded more followers", userItems, hasMore);
+            // if (request.user == null) {
+            //   throw new Error("Bad Request: User not found")
+            // }
+            // const [userItems, hasMore] = FakeData.instance.getPageOfUsers(request.lastItem, request.pageSize, request.user);
+            // if (userItems == null || hasMore == null) {
+            //   throw new Error("Internal Server Error: Something went wrong when connecting to the database")
+            // }   
+            return new tweeter_shared_1.LoadMoreFollowersResponse(true, "successfully loaded more followers", users, hasMore);
         });
     }
     ;
@@ -108,5 +123,10 @@ class FollowService extends Service_1.Service {
         });
     }
     ;
+    parseFollows(follows) {
+        const myObj = follows;
+        // this needs to match the constructor of the Follows class
+        return new Follows_1.Follows(myObj.follower_handle, myObj.follower_name, myObj.followee_handle, myObj.followee_name);
+    }
 }
 exports.FollowService = FollowService;

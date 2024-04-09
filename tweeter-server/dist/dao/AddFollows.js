@@ -9,11 +9,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loadMoreFollowersHandler = void 0;
-const tweeter_shared_1 = require("tweeter-shared");
-const FollowService_1 = require("../model/service/FollowService");
-const loadMoreFollowersHandler = (event) => __awaiter(void 0, void 0, void 0, function* () {
-    const deserializedEvent = tweeter_shared_1.LoadMoreFollowersRequest.fromJson(event);
-    return new FollowService_1.FollowService().loadMoreFollowers(deserializedEvent);
+const main = () => __awaiter(void 0, void 0, void 0, function* () {
+    // // create a users DAO
+    // const userDAO: DynamoUserDAO = Factory.factory.getUserDAO();
+    // // add user0 - user24 with put command
+    // for (let i = 0; i < 25; i++) {
+    //   await userDAO.putUser(
+    //     `User${i}`, // alias
+    //     "a",        // password
+    //     "User",     // first name
+    //     `${i}`,          // last name
+    //     "https://my-tweeter-bucket.s3.us-west-2.amazonaws.com/image/thousand-yard-stare-1000-yard-stare.png"  // image url
+    //   );
+    // }
 });
-exports.loadMoreFollowersHandler = loadMoreFollowersHandler;
+main();
