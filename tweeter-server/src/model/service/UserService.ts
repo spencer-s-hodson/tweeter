@@ -3,7 +3,6 @@ import { AuthToken, AuthenticateResponse, GetUserRequest, GetUserResponse, Login
 import { Factory } from "../../factory/Factory";
 import { UserDAO } from "../../dao/interfaces/UserDAO";
 import { Service } from "./Service";
-import { ExistingObjectReplicationStatus } from "@aws-sdk/client-s3";
 
 export class UserService extends Service {
   private userDAO: UserDAO;
@@ -26,20 +25,15 @@ export class UserService extends Service {
     }
 
     // create user and authToken
-    // const user = this.dynamoUserToUser(existingUser);
+    const user = this.dynamoUserToUser(existingUser);
     const authToken = AuthToken.Generate();
 
     // put authToken in table
     await this.authDAO.putAuth(authToken.token, authToken.timestamp);
 
     // return a login response
-    return new AuthenticateResponse(true, `Successfully logged in ${existingUser.firstName}.`, existingUser, authToken);
+    return new AuthenticateResponse(true, `Successfully logged in ${existingUser.firstName}.`, user, authToken);
   };
-
-
-
-
-
 
 
 
@@ -66,8 +60,8 @@ export class UserService extends Service {
     const image_url: string = await this.userDAO.putImage(`${request.alias}-image`, request.userImageBytes);
 
     // put the user in the DB
-    await this.userDAO.putUser(request.alias, hashedPassword, request.firstName, request.lastName, image_url);
-    // await this.initialize();
+    await this.userDAO.putUser(request.alias, hashedPassword, request.firstName, request.lastName, image_url, 1, 1);
+    await this.initialize();
     
     // create a user and authToken if all of this worked
     const user = new User(request.firstName, request.lastName, request.alias, image_url);
@@ -93,12 +87,6 @@ export class UserService extends Service {
     return new LogoutResponse(true, "successfuly logged user out");
   };
 
-
-
-
-
-
-
   // test this
   public async getUser(request: GetUserRequest): Promise<GetUserResponse> {
     // make sure the request is good
@@ -114,47 +102,32 @@ export class UserService extends Service {
 
     // get the user
     const user: User | null = await this.userDAO.getUser(request.alias);
-    console.log("GOTTEN USER: " + user);
     if (user == null) {
       return new GetUserResponse(false, "couldn't find user", null);
     }
     else {
-      // const actualUser = this.dynamoUserToUser(dynamoUser);
-      return new GetUserResponse(true, "successfully found user", user);
+      const actualUser = this.dynamoUserToUser(user);
+      return new GetUserResponse(true, "successfully found user", actualUser);
     }
   };
-
-  // converts a dynamo user to a User object
-  // private dynamoUserToUser(user: User) {
-  //   interface DyanmoUser {
-  //     user_last_name: string,
-  //     user_first_name: string
-  //     user_alias: string
-  //     user_password: string
-  //     user_image: string
-  //   }
-  //   const dyanmoUser: DyanmoUser = user as unknown as DyanmoUser;
-  //   return new User(dyanmoUser.user_first_name, dyanmoUser.user_last_name, dyanmoUser.user_alias, dyanmoUser.user_image);
-  // }
 
   // hashs the password
   private static hashPassword(password: string): string {
     return SHA256(password).toString();
   }
 
-  // // not getting initialized
-  // private async initialize() {
-  //   // await this.userDAO.putUser(request.alias, hashedPassword, request.firstName, request.lastName, image_url);
-
-  //   // add user0 - user24 with put command
-  //   for (let i = 0; i < 25; i++) {
-  //     await this.userDAO.putUser(
-  //       `@User${i}`, // alias
-  //       "a",        // password
-  //       "User",     // first name
-  //       `${i}`,          // last name
-  //       "https://my-tweeter-bucket.s3.us-west-2.amazonaws.com/image/thousand-yard-stare-1000-yard-stare.png"  // image url
-  //     );
-  //   }
-  // }
+  private async initialize() {
+    // add user0 - user24 with put command
+    for (let i = 0; i < 25; i++) {
+      await this.userDAO.putUser(
+        `@User${i}`, // alias
+        "a",        // password
+        "User",     // first name
+        `${i}`,          // last name
+        "https://faculty.cs.byu.edu/~jwilkerson/cs340/tweeter/images/donald_duck.png",  // why doesn't this work
+        1,          // following
+        1           // followers
+      );
+    }
+  }
 }

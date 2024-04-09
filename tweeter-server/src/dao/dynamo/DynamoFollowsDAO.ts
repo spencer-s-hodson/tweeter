@@ -1,6 +1,5 @@
 import {
   DeleteCommand,
-  DynamoDBDocumentClient,
   GetCommand,
   PutCommand,
   QueryCommand,
@@ -14,11 +13,11 @@ import { FollowsDAO } from "../interfaces/FollowsDAO";
 export class DynamoFollowsDAO extends DAO implements FollowsDAO {
   readonly tableName: string = "follows";
   readonly indexName = "follows_index";
-  // private readonly client = DynamoDBDocumentClient.from(new DynamoDBClient({ region: "us-west-2" }));  // the example code didn't put the region why do i
 
   public async putItem(follower_handle: string, follower_name: string, followee_handle: string, followee_name: string): Promise<void> {
-    follower_handle = this.addAtSymbol(follower_handle);
-    followee_handle = this.addAtSymbol(followee_handle);
+    // follower_handle = this.addAtSymbol(follower_handle);
+    // followee_handle = this.addAtSymbol(followee_handle);
+
     const item = {
       follower_handle,
       follower_name,
@@ -111,6 +110,25 @@ export class DynamoFollowsDAO extends DAO implements FollowsDAO {
     return new DataPage<Follows>(items, lastKey);
   }
 
+  public async getFollowersCount(followee_handle: string): Promise<number> {
+
+
+
+
+    return 1;
+  }
+
+  public async getFolloweesCount(follower_handle: string): Promise<number> {
+
+
+
+
+    return 1;
+  }
+
+
+
+
   private addAtSymbol(handle: string) {
     if (handle[0] == "@") {
       return handle;
@@ -118,25 +136,5 @@ export class DynamoFollowsDAO extends DAO implements FollowsDAO {
     else {
       return "@" + handle;
     }
-  }
-
-  private parseFollows(follows: Follows) {
-    // this needs to match what the incoming object looks like (idk why this is backwards)
-    interface IFollows {
-      followee_handle: string
-      followee_name: string
-      follower_handle: string
-      follower_name: string
-    }
-
-    const myObj: IFollows = follows as unknown as IFollows;
-
-    // this needs to match the constructor of the Follows class
-    return new Follows(
-      myObj.follower_handle,
-      myObj.follower_name,
-      myObj.followee_handle,
-      myObj.followee_name
-    )
   }
 }

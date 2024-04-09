@@ -20,21 +20,20 @@ export class DynamoUserDAO extends DAO implements UserDAO {
       user_alias
     };
     const { Item } = await this.client.send(new GetCommand({ TableName: this.tableName, Key: key }));
-
-    // convert the DynamoUser into a usable user
-    const user = this.dynamoUserToUser(Item);
-    return user;
+    return Item;
   }
 
   // need to change table name
-  public async putUser(user_alias: string, user_password: string, user_first_name: string, user_last_name: string, user_image: string): Promise<void> {
+  public async putUser(user_alias: string, user_password: string, user_first_name: string, user_last_name: string, user_image: string, following: number, followers: number): Promise<void> {
     // is this wrong?
     const item = {
       user_alias,
       user_first_name,
       user_image,
       user_last_name,
-      user_password
+      user_password,
+      following,
+      followers
     };
     await this.client.send(new PutCommand({ TableName: this.tableName, Item: item }));
   }
@@ -60,30 +59,5 @@ export class DynamoUserDAO extends DAO implements UserDAO {
     } catch (error) {
       throw Error("s3 put image failed with: " + error);
     }
-  }
-
-  private dynamoUserToUser(user: any) {
-    // this is how it was given to me
-
-    console.log("user in dao: " + JSON.stringify(user));
-
-    interface DyanmoUser {
-      user_first_name: string
-      user_last_name: string
-      user_alias: string
-      user_password: string
-      user_image: string
-    }
-
-    const dyanmoUser: DyanmoUser = user as unknown as DyanmoUser;
-
-    console.log("DYNAMO USER: " + JSON.stringify(dyanmoUser));
-
-    return new User(
-      dyanmoUser.user_first_name,
-      dyanmoUser.user_last_name,
-      dyanmoUser.user_alias,
-      dyanmoUser.user_image
-    );
   }
 }

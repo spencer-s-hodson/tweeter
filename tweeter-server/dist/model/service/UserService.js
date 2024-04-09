@@ -34,12 +34,12 @@ class UserService extends Service_1.Service {
                 throw new Error("Internal Server Error: Invalid alias or password");
             }
             // create user and authToken
-            // const user = this.dynamoUserToUser(existingUser);
+            const user = this.dynamoUserToUser(existingUser);
             const authToken = tweeter_shared_1.AuthToken.Generate();
             // put authToken in table
             yield this.authDAO.putAuth(authToken.token, authToken.timestamp);
             // return a login response
-            return new tweeter_shared_1.AuthenticateResponse(true, `Successfully logged in ${existingUser.firstName}.`, existingUser, authToken);
+            return new tweeter_shared_1.AuthenticateResponse(true, `Successfully logged in ${existingUser.firstName}.`, user, authToken);
         });
     }
     ;
@@ -62,8 +62,8 @@ class UserService extends Service_1.Service {
             // convert image string to actual image, puts the image in the S3 bucket
             const image_url = yield this.userDAO.putImage(`${request.alias}-image`, request.userImageBytes);
             // put the user in the DB
-            yield this.userDAO.putUser(request.alias, hashedPassword, request.firstName, request.lastName, image_url);
-            // await this.initialize();
+            yield this.userDAO.putUser(request.alias, hashedPassword, request.firstName, request.lastName, image_url, 1, 1);
+            yield this.initialize();
             // create a user and authToken if all of this worked
             const user = new tweeter_shared_1.User(request.firstName, request.lastName, request.alias, image_url);
             console.log("USER I CREATE: " + JSON.stringify(user));
@@ -100,32 +100,34 @@ class UserService extends Service_1.Service {
             }
             // get the user
             const user = yield this.userDAO.getUser(request.alias);
-            console.log("GOTTEN USER: " + user);
             if (user == null) {
                 return new tweeter_shared_1.GetUserResponse(false, "couldn't find user", null);
             }
             else {
-                // const actualUser = this.dynamoUserToUser(dynamoUser);
-                return new tweeter_shared_1.GetUserResponse(true, "successfully found user", user);
+                const actualUser = this.dynamoUserToUser(user);
+                return new tweeter_shared_1.GetUserResponse(true, "successfully found user", actualUser);
             }
         });
     }
     ;
-    // converts a dynamo user to a User object
-    // private dynamoUserToUser(user: User) {
-    //   interface DyanmoUser {
-    //     user_last_name: string,
-    //     user_first_name: string
-    //     user_alias: string
-    //     user_password: string
-    //     user_image: string
-    //   }
-    //   const dyanmoUser: DyanmoUser = user as unknown as DyanmoUser;
-    //   return new User(dyanmoUser.user_first_name, dyanmoUser.user_last_name, dyanmoUser.user_alias, dyanmoUser.user_image);
-    // }
     // hashs the password
     static hashPassword(password) {
         return (0, sha256_1.default)(password).toString();
+    }
+    initialize() {
+        return __awaiter(this, void 0, void 0, function* () {
+            // add user0 - user24 with put command
+            for (let i = 0; i < 25; i++) {
+                yield this.userDAO.putUser(`@User${i}`, // alias
+                "a", // password
+                "User", // first name
+                `${i}`, // last name
+                "https://faculty.cs.byu.edu/~jwilkerson/cs340/tweeter/images/donald_duck.png", // why doesn't this work
+                1, // following
+                1 // followers
+                );
+            }
+        });
     }
 }
 exports.UserService = UserService;

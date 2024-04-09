@@ -13,17 +13,15 @@ exports.FollowService = void 0;
 const tweeter_shared_1 = require("tweeter-shared");
 const Service_1 = require("./Service");
 const Factory_1 = require("../../factory/Factory");
-const Follows_1 = require("../../entity/Follows");
 class FollowService extends Service_1.Service {
     constructor() {
         super();
         this.followsDAO = Factory_1.Factory.factory.getFollowsDAO();
         this.userDAO = Factory_1.Factory.factory.getUserDAO();
     }
-    // MAKE SURE THIS RECURSES
     loadMoreFollowers(request) {
-        var _a;
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             // make sure the request is okay
             if (request.user == null || request.authToken == null) {
                 throw new Error("Bad Request");
@@ -43,65 +41,107 @@ class FollowService extends Service_1.Service {
             for (let followsItem of followsItems) {
                 // parse followsItem
                 const item = this.parseFollows(followsItem);
-                // DEBUG
-                console.log("Follows After Parsing: " + item);
+                console.log("ITEM: " + JSON.stringify(item));
                 // we are getting the followers so we get user by followerHandle
-                // problem: this is return the shape of a dyamo user (put these functions in the DAO's!)
-                const user = yield this.userDAO.getUser(item.follower_handle); // does this violate anything?
-                console.log("THE USER: " + JSON.stringify(user));
+                const dynamoUser = yield this.userDAO.getUser(item.follower_handle);
+                // DEBUG
+                console.log("DYNAO USER: " + JSON.stringify(dynamoUser));
+                const user = this.dynamoUserToUser(dynamoUser);
                 if (user == null) {
                     throw new Error("This user does not exist!");
                 }
                 users.push(user);
             }
-            console.log("USERS: " + JSON.stringify(users));
-            // if (request.authToken == null) {
-            //   throw new Error("Auth Error: Invalid auth token");
-            // }
-            // if (request.user == null) {
-            //   throw new Error("Bad Request: User not found")
-            // }
-            // const [userItems, hasMore] = FakeData.instance.getPageOfUsers(request.lastItem, request.pageSize, request.user);
-            // if (userItems == null || hasMore == null) {
-            //   throw new Error("Internal Server Error: Something went wrong when connecting to the database")
-            // }   
             return new tweeter_shared_1.LoadMoreFollowersResponse(true, "successfully loaded more followers", users, hasMore);
         });
     }
     ;
     loadMoreFollowees(request) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (request.authToken == null) {
-                throw new Error("Auth Error: Invalid auth token");
+            var _a;
+            // make sure the request is okay
+            if (request.user == null || request.authToken == null) {
+                throw new Error("Bad Request");
             }
-            if (request.user == null) {
-                throw new Error("Bad Request: User not found");
+            // validate the authToken
+            if (!this.isValidAuthToken(request.authToken)) {
+                throw new Error("Session Expired, please logout and log back in");
             }
-            const [userItems, hasMore] = tweeter_shared_1.FakeData.instance.getPageOfUsers(request.lastItem, request.pageSize, request.user);
-            if (userItems == null || hasMore == null) {
-                throw new Error("Internal Server Error: Something went wrong when connecting to the database");
+            const stuff = yield this.followsDAO.getPageOfFollowees(request.user.alias, request.pageSize, (_a = request.lastItem) === null || _a === void 0 ? void 0 : _a.alias);
+            const followsItems = stuff.items;
+            const hasMore = stuff.hasMorePages;
+            let users = [];
+            for (let followsItem of followsItems) {
+                // parse followsItem
+                const item = this.parseFollows(followsItem);
+                // we are getting the followers so we get user by followerHandle
+                const dynamoUser = yield this.userDAO.getUser(item.followee_handle);
+                // then convert to actual user
+                const user = this.dynamoUserToUser(dynamoUser);
+                if (user == null) {
+                    throw new Error("This user does not exist!");
+                }
+                users.push(user);
             }
-            return new tweeter_shared_1.LoadMoreFolloweesResponse(true, "successfully loaded more followers", userItems, hasMore);
+            return new tweeter_shared_1.LoadMoreFolloweesResponse(true, "successfully loaded more followers", users, hasMore);
         });
     }
     ;
     getIsFollowerStatus(request) {
         return __awaiter(this, void 0, void 0, function* () {
-            return new tweeter_shared_1.GetIsFollowerStatusResponse(true, "successfully determined whether the selceted user is a follower or not", tweeter_shared_1.FakeData.instance.isFollower());
+            // make sure request is good
+            if (!request.user || !request.selectedUser) {
+                throw new Error("Bad Request");
+            }
+            // validate the authToken
+            if (!this.isValidAuthToken(request.authToken)) {
+                throw new Error("Bad AuthToken");
+            }
+            // get Follows
+            const dynamoFollows = yield this.followsDAO.getItem(request.user.alias, request.selectedUser.alias);
+            const follows = this.parseFollows(dynamoFollows);
+            if (!follows) {
+                return new tweeter_shared_1.GetIsFollowerStatusResponse(true, "selected user is not a follower", false);
+            }
+            else {
+                return new tweeter_shared_1.GetIsFollowerStatusResponse(true, "selected user is a follower", true);
+            }
         });
     }
     ;
     getFolloweesCount(request) {
         return __awaiter(this, void 0, void 0, function* () {
-            const followeeCount = yield tweeter_shared_1.FakeData.instance.getFolloweesCount(request.user);
-            return new tweeter_shared_1.GetFolloweesCountResponse(true, "successfully got user's followee count", followeeCount);
+            // make sure the request is good
+            if (!request.user) {
+                throw new Error("Bad Request");
+            }
+            // is authenticated user
+            if (!this.isValidAuthToken) {
+                throw new Error("Bad Auth");
+            }
+            // get a user
+            const dynamoUser = yield this.userDAO.getUser(request.user.alias);
+            const num = Number(this.getCount(dynamoUser, false));
+            console.log(num);
+            return new tweeter_shared_1.GetFolloweesCountResponse(true, "successfully got user's follower count", num);
         });
     }
     ;
     getFollowersCount(request) {
         return __awaiter(this, void 0, void 0, function* () {
-            const followerCount = yield tweeter_shared_1.FakeData.instance.getFollowersCount(request.user);
-            return new tweeter_shared_1.GetFollowersCountResponse(true, "successfully got user's follower count", followerCount);
+            // make sure the request is good
+            if (!request.user) {
+                throw new Error("Bad Request");
+            }
+            // is authenticated user
+            if (!this.isValidAuthToken) {
+                throw new Error("Bad Auth");
+            }
+            // get a user
+            const dynamoUser = yield this.userDAO.getUser(request.user.alias);
+            const num = Number(this.getCount(dynamoUser, true));
+            console.log(num);
+            return new tweeter_shared_1.GetFollowersCountResponse(true, "successfully got user's follower count", num);
         });
     }
     ;
@@ -123,10 +163,9 @@ class FollowService extends Service_1.Service {
         });
     }
     ;
-    parseFollows(follows) {
-        const myObj = follows;
-        // this needs to match the constructor of the Follows class
-        return new Follows_1.Follows(myObj.follower_handle, myObj.follower_name, myObj.followee_handle, myObj.followee_name);
+    getCount(user, followers) {
+        const dyanmoUser = user;
+        return followers ? dyanmoUser.followers : dyanmoUser.following;
     }
 }
 exports.FollowService = FollowService;

@@ -11,7 +11,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DynamoFollowsDAO = void 0;
 const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
-const Follows_1 = require("../../entity/Follows");
 const DataPage_1 = require("../../entity/DataPage");
 const DAO_1 = require("../DAO"); // this doesn't so anything as of right now
 class DynamoFollowsDAO extends DAO_1.DAO {
@@ -20,11 +19,10 @@ class DynamoFollowsDAO extends DAO_1.DAO {
         this.tableName = "follows";
         this.indexName = "follows_index";
     }
-    // private readonly client = DynamoDBDocumentClient.from(new DynamoDBClient({ region: "us-west-2" }));  // the example code didn't put the region why do i
     putItem(follower_handle, follower_name, followee_handle, followee_name) {
         return __awaiter(this, void 0, void 0, function* () {
-            follower_handle = this.addAtSymbol(follower_handle);
-            followee_handle = this.addAtSymbol(followee_handle);
+            // follower_handle = this.addAtSymbol(follower_handle);
+            // followee_handle = this.addAtSymbol(followee_handle);
             const item = {
                 follower_handle,
                 follower_name,
@@ -118,6 +116,16 @@ class DynamoFollowsDAO extends DAO_1.DAO {
             return new DataPage_1.DataPage(items, lastKey);
         });
     }
+    getFollowersCount(followee_handle) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return 1;
+        });
+    }
+    getFolloweesCount(follower_handle) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return 1;
+        });
+    }
     addAtSymbol(handle) {
         if (handle[0] == "@") {
             return handle;
@@ -125,11 +133,6 @@ class DynamoFollowsDAO extends DAO_1.DAO {
         else {
             return "@" + handle;
         }
-    }
-    parseFollows(follows) {
-        const myObj = follows;
-        // this needs to match the constructor of the Follows class
-        return new Follows_1.Follows(myObj.follower_handle, myObj.follower_name, myObj.followee_handle, myObj.followee_name);
     }
 }
 exports.DynamoFollowsDAO = DynamoFollowsDAO;

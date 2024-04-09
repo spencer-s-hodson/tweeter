@@ -5,6 +5,7 @@ import { Factory } from "../../factory/Factory";
 import { DataPage } from "../../entity/DataPage";
 import { Follows } from "../../entity/Follows";
 import { UserDAO } from "../../dao/interfaces/UserDAO";
+import { stringify } from "uuid";
 
 export class FollowService extends Service {
   private followsDAO: FollowsDAO;
@@ -16,7 +17,7 @@ export class FollowService extends Service {
     this.userDAO = Factory.factory.getUserDAO();
   }
 
-  // MAKE SURE THIS RECURSES
+
   public async loadMoreFollowers(request: LoadMoreFollowersRequest): Promise<LoadMoreFollowersResponse> {
     // make sure the request is okay
     if (request.user == null || request.authToken == null) {
@@ -43,68 +44,118 @@ export class FollowService extends Service {
     for (let followsItem of followsItems) {
       // parse followsItem
       const item: Follows = this.parseFollows(followsItem);
+      console.log("ITEM: " + JSON.stringify(item));
+      // we are getting the followers so we get user by followerHandle
+      const dynamoUser: User | null = await this.userDAO.getUser(item.follower_handle);
 
       // DEBUG
-      console.log("Follows After Parsing: " + item);
+      console.log("DYNAO USER: " + JSON.stringify(dynamoUser));
 
-      // we are getting the followers so we get user by followerHandle
-      // problem: this is return the shape of a dyamo user (put these functions in the DAO's!)
-      const user: User | null = await this.userDAO.getUser(item.follower_handle)  // does this violate anything?
-      console.log("THE USER: " + JSON.stringify(user));
+      const user: User = this.dynamoUserToUser(dynamoUser);
       if (user == null) {
         throw new Error("This user does not exist!")
       }
       users.push(user);
     }
 
-    console.log("USERS: " + JSON.stringify(users));
-
-
-
-    // if (request.authToken == null) {
-    //   throw new Error("Auth Error: Invalid auth token");
-    // }
-    // if (request.user == null) {
-    //   throw new Error("Bad Request: User not found")
-    // }
-
-    // const [userItems, hasMore] = FakeData.instance.getPageOfUsers(request.lastItem, request.pageSize, request.user);
-    // if (userItems == null || hasMore == null) {
-    //   throw new Error("Internal Server Error: Something went wrong when connecting to the database")
-    // }   
-
     return new LoadMoreFollowersResponse(true, "successfully loaded more followers", users, hasMore);
   };
 
+
   public async loadMoreFollowees(request: LoadMoreFolloweesRequest): Promise<LoadMoreFolloweesResponse> {
-    if (request.authToken == null) {
-      throw new Error("Auth Error: Invalid auth token");
-    }
-    if (request.user == null) {
-      throw new Error("Bad Request: User not found")
+    // make sure the request is okay
+    if (request.user == null || request.authToken == null) {
+      throw new Error("Bad Request");
     }
 
-    const [userItems, hasMore] = FakeData.instance.getPageOfUsers(request.lastItem, request.pageSize, request.user);
-    if (userItems == null || hasMore == null) {
-      throw new Error("Internal Server Error: Something went wrong when connecting to the database")
-    }   
+    // validate the authToken
+    if (!this.isValidAuthToken(request.authToken)) {
+      throw new Error("Session Expired, please logout and log back in");
+    }
+
+    const stuff: DataPage<Follows> = await this.followsDAO.getPageOfFollowees(request.user.alias, request.pageSize, request.lastItem?.alias);
     
-    return new LoadMoreFolloweesResponse(true, "successfully loaded more followers", userItems, hasMore);
+    const followsItems = stuff.items;
+    const hasMore = stuff.hasMorePages;
+
+    let users: User[] = []
+    for (let followsItem of followsItems) {
+      // parse followsItem
+      const item: Follows = this.parseFollows(followsItem);
+      // we are getting the followers so we get user by followerHandle
+      const dynamoUser: User | null = await this.userDAO.getUser(item.followee_handle);
+      // then convert to actual user
+      const user: User = this.dynamoUserToUser(dynamoUser);
+      if (user == null) {
+        throw new Error("This user does not exist!");
+      }
+      users.push(user);
+    }
+
+    return new LoadMoreFolloweesResponse(true, "successfully loaded more followers", users, hasMore);
   };
 
   public async getIsFollowerStatus(request: GetIsFollowerStatusRequest): Promise<GetIsFollowerStatusResponse> {
-    return new GetIsFollowerStatusResponse(true, "successfully determined whether the selceted user is a follower or not", FakeData.instance.isFollower());
+    // make sure request is good
+    if (!request.user || !request.selectedUser) {
+      throw new Error("Bad Request");
+    }
+
+    // validate the authToken
+    if (!this.isValidAuthToken(request.authToken)) {
+      throw new Error("Bad AuthToken");
+    }
+
+    // get Follows
+    const dynamoFollows: Follows = await this.followsDAO.getItem(request.user.alias, request.selectedUser.alias);
+    const follows = this.parseFollows(dynamoFollows);
+    if (!follows) {
+      return new GetIsFollowerStatusResponse(true, "selected user is not a follower", false);
+    }
+    else {
+      return new GetIsFollowerStatusResponse(true, "selected user is a follower", true);
+    }
   };
 
   public async getFolloweesCount(request: GetFolloweesCountRequest): Promise<GetFolloweesCountResponse> {
-    const followeeCount = await FakeData.instance.getFolloweesCount(request.user)
-    return new GetFolloweesCountResponse(true, "successfully got user's followee count", followeeCount);
+    // make sure the request is good
+    if (!request.user) {
+      throw new Error("Bad Request");
+    }
+
+    // is authenticated user
+    if (!this.isValidAuthToken) {
+      throw new Error("Bad Auth");
+    }
+
+    // get a user
+    const dynamoUser = await this.userDAO.getUser(request.user.alias);
+
+    const num = Number(this.getCount(dynamoUser, false));
+    console.log(num);
+    return new GetFolloweesCountResponse(true, "successfully got user's follower count", num);
   };
 
+
   public async getFollowersCount(request: GetFollowersCountRequest): Promise<GetFollowersCountResponse> {
-    const followerCount = await FakeData.instance.getFollowersCount(request.user);
-    return new GetFollowersCountResponse(true, "successfully got user's follower count", followerCount);
+    // make sure the request is good
+    if (!request.user) {
+      throw new Error("Bad Request");
+    }
+
+    // is authenticated user
+    if (!this.isValidAuthToken) {
+      throw new Error("Bad Auth");
+    }
+
+    // get a user
+    const dynamoUser = await this.userDAO.getUser(request.user.alias);
+
+    const num = Number(this.getCount(dynamoUser, true));
+    console.log(num);
+    return new GetFollowersCountResponse(true, "successfully got user's follower count", num);
   };
+
 
   public async follow(request: FollowRequest): Promise<FollowResponse> {
     await new Promise((f) => setTimeout(f, 2000));
@@ -125,23 +176,17 @@ export class FollowService extends Service {
   };
 
 
-  private parseFollows(follows: Follows) {
-    // this needs to match what the incoming object looks like (idk why this is backwards)
-    interface IFollows {
-      followee_handle: string
-      followee_name: string
-      follower_handle: string
-      follower_name: string
+  private getCount(user: User | null, followers: boolean) {
+    interface DyanmoUser {
+      user_first_name: string
+      user_last_name: string
+      user_alias: string
+      user_password: string
+      user_image: string
+      following: string
+      followers: string
     }
-
-    const myObj: IFollows = follows as unknown as IFollows;
-
-    // this needs to match the constructor of the Follows class
-    return new Follows(
-      myObj.follower_handle,
-      myObj.follower_name,
-      myObj.followee_handle,
-      myObj.followee_name
-    )
+    const dyanmoUser: DyanmoUser = user as unknown as DyanmoUser;
+    return followers ? dyanmoUser.followers : dyanmoUser.following;
   }
 }

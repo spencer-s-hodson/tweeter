@@ -10,7 +10,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DynamoUserDAO = void 0;
-const tweeter_shared_1 = require("tweeter-shared");
 const DAO_1 = require("../DAO");
 const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
 const client_s3_1 = require("@aws-sdk/client-s3");
@@ -25,13 +24,11 @@ class DynamoUserDAO extends DAO_1.DAO {
                 user_alias
             };
             const { Item } = yield this.client.send(new lib_dynamodb_1.GetCommand({ TableName: this.tableName, Key: key }));
-            // convert the DynamoUser into a usable user
-            const user = this.dynamoUserToUser(Item);
-            return user;
+            return Item;
         });
     }
     // need to change table name
-    putUser(user_alias, user_password, user_first_name, user_last_name, user_image) {
+    putUser(user_alias, user_password, user_first_name, user_last_name, user_image, following, followers) {
         return __awaiter(this, void 0, void 0, function* () {
             // is this wrong?
             const item = {
@@ -39,7 +36,9 @@ class DynamoUserDAO extends DAO_1.DAO {
                 user_first_name,
                 user_image,
                 user_last_name,
-                user_password
+                user_password,
+                following,
+                followers
             };
             yield this.client.send(new lib_dynamodb_1.PutCommand({ TableName: this.tableName, Item: item }));
         });
@@ -66,13 +65,6 @@ class DynamoUserDAO extends DAO_1.DAO {
                 throw Error("s3 put image failed with: " + error);
             }
         });
-    }
-    dynamoUserToUser(user) {
-        // this is how it was given to me
-        console.log("user in dao: " + JSON.stringify(user));
-        const dyanmoUser = user;
-        console.log("DYNAMO USER: " + JSON.stringify(dyanmoUser));
-        return new tweeter_shared_1.User(dyanmoUser.user_first_name, dyanmoUser.user_last_name, dyanmoUser.user_alias, dyanmoUser.user_image);
     }
 }
 exports.DynamoUserDAO = DynamoUserDAO;

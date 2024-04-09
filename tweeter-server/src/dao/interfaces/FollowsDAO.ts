@@ -8,4 +8,7 @@ export interface FollowsDAO {
   deleteItem: (follower_handle: string, followee_handle: string) => Promise<void>
   getPageOfFollowees: (follower_handle: string, page_size: number, last_followee_handle: string | undefined) => Promise<DataPage<Follows>>
   getPageOfFollowers: (followee_handle: string, page_size: number, last_follower_handle: string | undefined) => Promise<DataPage<Follows>>
+  getFollowersCount: (followee_handle: string) => Promise<number>
+  getFolloweesCount: (follower_handle: string) => Promise<number>
+  // getIsFollower: () => Promise<boolean>
 }
