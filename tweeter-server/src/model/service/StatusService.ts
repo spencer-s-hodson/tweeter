@@ -50,7 +50,7 @@ export class StatusService extends Service {
     }
 
     // validate the authToken
-    if (this.isValidAuthToken(request.authToken)) {
+    if (!this.isValidAuthToken(request.authToken)) {
       throw new Error("[Bad AuthToken]")
     }
 
@@ -93,7 +93,7 @@ export class StatusService extends Service {
     }
 
     // validate authToken
-    if (this.isValidAuthToken(request.authToken)) {
+    if (!this.isValidAuthToken(request.authToken)) {
       throw new Error("Expired!")
     }
 
@@ -115,7 +115,7 @@ export class StatusService extends Service {
 
 
     // return a response
-    await new Promise((f) => setTimeout(f, 2000));
+    // await new Promise((f) => setTimeout(f, 10000));
     return new PostStatusResponse(true, "successfully posted a status");
 
 

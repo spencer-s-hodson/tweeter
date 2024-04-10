@@ -25,5 +25,13 @@ class Service {
         const myObj = follows;
         return new Follows_1.Follows(myObj.follower_handle, myObj.followee_handle);
     }
+    dynamoAuthtoAuth(authToken) {
+        const myObj = authToken;
+        return new tweeter_shared_1.AuthToken(myObj.token, myObj.timestamp);
+    }
+    getAliasFromDynamoAuth(authToken) {
+        const dynamoAuthToken = authToken;
+        return dynamoAuthToken.user_alias;
+    }
 }
 exports.Service = Service;

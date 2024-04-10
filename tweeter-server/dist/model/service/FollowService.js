@@ -185,9 +185,6 @@ class FollowService extends Service_1.Service {
             yield this.userDAO.updateUser(followerAlias, followeeCurrCount + 1, false); // ClintEastwood's following count + 1
             // return a response
             return new tweeter_shared_1.FollowResponse(true, "successfully followed a user", 0, 0);
-            // await new Promise((f) => setTimeout(f, 2000));
-            // const followeesCountResponse: GetFolloweesCountResponse = await this.getFolloweesCount(new GetFolloweesCountRequest(request.authToken, request.userToFollow));
-            // const followersCountResponse: GetFollowersCountResponse = await this.getFollowersCount(new GetFollowersCountRequest(request.authToken, request.userToFollow));
         });
     }
     ;
@@ -223,12 +220,10 @@ class FollowService extends Service_1.Service {
             // increment counts
             const followerCurrCount = Number(this.getCount(yield this.userDAO.getUser(followeeAlias), true));
             const followeeCurrCount = Number(this.getCount(yield this.userDAO.getUser(followerAlias), false));
-            // const followerCurrCount: number = await this.followsDAO.getFollowersCount(followeeAlias); // User0's follower count
-            // const followeeCurrCount: number = await this.followsDAO.getFolloweesCount(followerAlias); // ClintEastwood's following count
             console.log("Current Follower Count: " + followerCurrCount);
             console.log("Current Followee Count: " + followeeCurrCount);
-            yield this.userDAO.updateUser(followeeAlias, followerCurrCount - 1, true); // User0's follower count +1
-            yield this.userDAO.updateUser(followerAlias, followeeCurrCount - 1, false); // ClintEastwood's following count + 1
+            yield this.userDAO.updateUser(followeeAlias, followerCurrCount - 1, true); // User0's follower count - 1
+            yield this.userDAO.updateUser(followerAlias, followeeCurrCount - 1, false); // ClintEastwood's following count - 1
             // return a response
             return new tweeter_shared_1.UnfollowResponse(true, "successfully followed a user", 0, 0);
         });
@@ -237,10 +232,6 @@ class FollowService extends Service_1.Service {
         const dyanmoUser = user;
         const response = followers ? dyanmoUser.followers : dyanmoUser.following;
         return Number(response);
-    }
-    getAliasFromDynamoAuth(authToken) {
-        const dynamoAuthToken = authToken;
-        return dynamoAuthToken.user_alias;
     }
 }
 exports.FollowService = FollowService;
