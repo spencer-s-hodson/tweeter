@@ -29,7 +29,7 @@ export class UserService extends Service {
     const authToken = AuthToken.Generate();
 
     // put authToken in table
-    await this.authDAO.putAuth(authToken.token, authToken.timestamp);
+    await this.authDAO.putAuth(authToken.token, authToken.timestamp, user.alias);
 
     // return a login response
     return new AuthenticateResponse(true, `Successfully logged in ${existingUser.firstName}.`, user, authToken);
@@ -61,15 +61,13 @@ export class UserService extends Service {
 
     // put the user in the DB
     await this.userDAO.putUser(request.alias, hashedPassword, request.firstName, request.lastName, image_url, 1, 1);
-    await this.initialize();
     
     // create a user and authToken if all of this worked
     const user = new User(request.firstName, request.lastName, request.alias, image_url);
-    console.log("USER I CREATE: " + JSON.stringify(user));
     const authToken = AuthToken.Generate();
 
     // put the authToken in table
-    await this.authDAO.putAuth(authToken.token, authToken.timestamp);
+    await this.authDAO.putAuth(authToken.token, authToken.timestamp, user.alias);
 
     // return the appropriate response
     return new AuthenticateResponse(true, "success", user, authToken);
@@ -83,6 +81,7 @@ export class UserService extends Service {
 
     // delete the authToken
     await this.authDAO.deleteAuth(request.authToken.token);
+    // await this.initialize();
 
     return new LogoutResponse(true, "successfuly logged user out");
   };
@@ -129,5 +128,8 @@ export class UserService extends Service {
         1           // followers
       );
     }
+
+    // go mess with clint and flint in the database
+    // and then go mess with the dynamo excercise
   }
 }

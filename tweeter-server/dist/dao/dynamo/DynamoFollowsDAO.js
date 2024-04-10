@@ -19,23 +19,19 @@ class DynamoFollowsDAO extends DAO_1.DAO {
         this.tableName = "follows";
         this.indexName = "follows_index";
     }
-    putItem(follower_handle, follower_name, followee_handle, followee_name) {
+    putItem(follower_handle, followee_handle) {
         return __awaiter(this, void 0, void 0, function* () {
-            // follower_handle = this.addAtSymbol(follower_handle);
-            // followee_handle = this.addAtSymbol(followee_handle);
             const item = {
                 follower_handle,
-                follower_name,
-                followee_handle,
-                followee_name,
+                followee_handle
             };
             yield this.client.send(new lib_dynamodb_1.PutCommand({ TableName: this.tableName, Item: item }));
         });
     }
     getItem(follower_handle, followee_handle) {
         return __awaiter(this, void 0, void 0, function* () {
-            follower_handle = this.addAtSymbol(follower_handle);
-            followee_handle = this.addAtSymbol(followee_handle);
+            // follower_handle = this.addAtSymbol(follower_handle);
+            // followee_handle = this.addAtSymbol(followee_handle);
             const key = {
                 follower_handle,
                 followee_handle
@@ -44,25 +40,23 @@ class DynamoFollowsDAO extends DAO_1.DAO {
             return Item;
         });
     }
-    updateItem(follower_handle, followee_handle, new_follower_name, new_followee_name) {
-        return __awaiter(this, void 0, void 0, function* () {
-            follower_handle = this.addAtSymbol(follower_handle);
-            followee_handle = this.addAtSymbol(followee_handle);
-            const params = {
-                TableName: this.tableName,
-                Key: {
-                    follower_handle,
-                    followee_handle
-                },
-                UpdateExpression: "SET follower_name = :new_follower_name, followee_name = :new_followee_name",
-                ExpressionAttributeValues: {
-                    ":new_follower_name": new_follower_name,
-                    ":new_followee_name": new_followee_name
-                }
-            };
-            yield this.client.send(new lib_dynamodb_1.UpdateCommand(params));
-        });
-    }
+    // public async updateItem(follower_handle: string, followee_handle: string): Promise<void> {
+    //   // follower_handle = this.addAtSymbol(follower_handle);
+    //   // followee_handle = this.addAtSymbol(followee_handle);
+    //   const params = {
+    //     TableName: this.tableName,
+    //     Key: {
+    //       follower_handle,
+    //       followee_handle
+    //     },
+    //     UpdateExpression: "SET follower_name = :new_follower_name, followee_name = :new_followee_name",
+    //     ExpressionAttributeValues: {
+    //       ":new_follower_name": new_follower_name,
+    //       ":new_followee_name": new_followee_name
+    //     }
+    //   };
+    //   await this.client.send(new UpdateCommand(params));
+    // }
     deleteItem(follower_handle, followee_handle) {
         return __awaiter(this, void 0, void 0, function* () {
             follower_handle = this.addAtSymbol(follower_handle);

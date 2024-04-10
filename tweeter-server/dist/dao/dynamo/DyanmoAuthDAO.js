@@ -26,11 +26,12 @@ class DynamoAuthDAO extends DAO_1.DAO {
             return Item;
         });
     }
-    putAuth(token, timestamp) {
+    putAuth(token, timestamp, user_alias) {
         return __awaiter(this, void 0, void 0, function* () {
             const item = {
                 token,
-                timestamp
+                timestamp,
+                user_alias
             };
             yield this.client.send(new lib_dynamodb_1.PutCommand({ TableName: this.tableName, Item: item }));
         });

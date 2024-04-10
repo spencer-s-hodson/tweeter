@@ -13,10 +13,11 @@ export class DynamoAuthDAO extends DAO implements AuthDAO {
     return Item;
   }
 
-  public async putAuth(token: string, timestamp: number): Promise<void> {
+  public async putAuth(token: string, timestamp: number, user_alias: string): Promise<void> {
     const item = {
       token,
-      timestamp
+      timestamp,
+      user_alias
     };
     await this.client.send(new PutCommand({ TableName: this.tableName, Item: item }));
   }

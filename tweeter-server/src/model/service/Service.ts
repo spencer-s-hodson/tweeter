@@ -42,20 +42,40 @@ export class Service {
     );
   }
 
-  protected parseFollows(follows: Follows) {
+  protected dynamoFollowsToFollows(follows: Follows) {
     interface IFollows {
       followee_handle: string
-      followee_name: string
       follower_handle: string
-      follower_name: string
     }
     const myObj: IFollows = follows as unknown as IFollows;
 
     return new Follows(
       myObj.follower_handle,
-      myObj.follower_name,
       myObj.followee_handle,
-      myObj.followee_name
     )
+  }
+
+  protected dynamoAuthtoAuth(authToken: AuthToken) {
+    interface DynamoAuthToken {
+      user_alias: string
+      token: string
+      timestamp: number
+    }
+    const myObj: DynamoAuthToken = authToken as unknown as DynamoAuthToken;
+
+    return new AuthToken(
+      myObj.token,
+      myObj.timestamp
+    );
+  }
+
+  protected getAliasFromDynamoAuth(authToken: AuthToken) {
+    interface DynamoAuthToken {
+      token: string
+      timestap: number
+      user_alias: string
+    }
+    const dynamoAuthToken: DynamoAuthToken = authToken as unknown as DynamoAuthToken;
+    return dynamoAuthToken.user_alias;
   }
 }

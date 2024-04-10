@@ -38,6 +38,47 @@ export class DynamoUserDAO extends DAO implements UserDAO {
     await this.client.send(new PutCommand({ TableName: this.tableName, Item: item }));
   }
 
+  // toggle follower and following updates with a boolean
+  public async updateUser(user_alias: string, new_count: number, update_followers: boolean) {
+    let userType: string;
+    if (update_followers) {
+      userType = "followers"
+    }
+    else {
+      userType = "following";
+    }
+
+    const params = {
+      TableName: this.tableName,
+      Key: {
+        user_alias
+      },
+      UpdateExpression: `SET ${userType} = :new_count`,
+      ExpressionAttributeValues: {
+        ":new_count": new_count,
+      }
+    };
+    await this.client.send(new UpdateCommand(params));
+  }
+
+  // public async updateUser(user_alias: string, new_followers_count: number, new_followees_count: number) {
+  //   const params = {
+  //     TableName: this.tableName,
+  //     Key: {
+  //       user_alias
+  //     },
+  //     UpdateExpression: "SET followers = :new_followers_count, following = :new_followees_count",
+  //     ExpressionAttributeValues: {
+  //       ":new_followers_count": new_followers_count,
+  //       ":new_followees_count": new_followees_count
+  //     }
+  //   };
+  //   await this.client.send(new UpdateCommand(params));
+  // }
+
+
+
+
   public async putImage(fileName: string, imageStringBase64Encoded: string): Promise<string> {
     const BUCKET = "my-tweeter-bucket";
     const REGION = "us-west-2";

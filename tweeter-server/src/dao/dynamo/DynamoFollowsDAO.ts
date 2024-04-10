@@ -14,22 +14,17 @@ export class DynamoFollowsDAO extends DAO implements FollowsDAO {
   readonly tableName: string = "follows";
   readonly indexName = "follows_index";
 
-  public async putItem(follower_handle: string, follower_name: string, followee_handle: string, followee_name: string): Promise<void> {
-    // follower_handle = this.addAtSymbol(follower_handle);
-    // followee_handle = this.addAtSymbol(followee_handle);
-
+  public async putItem(follower_handle: string, followee_handle: string): Promise<void> {
     const item = {
       follower_handle,
-      follower_name,
-      followee_handle,
-      followee_name,
+      followee_handle
     };
     await this.client.send(new PutCommand({ TableName: this.tableName, Item: item }));
   }
 
   public async getItem(follower_handle: string, followee_handle: string): Promise<any> {
-    follower_handle = this.addAtSymbol(follower_handle);
-    followee_handle = this.addAtSymbol(followee_handle);
+    // follower_handle = this.addAtSymbol(follower_handle);
+    // followee_handle = this.addAtSymbol(followee_handle);
     const key = {
       follower_handle,
       followee_handle
@@ -38,23 +33,23 @@ export class DynamoFollowsDAO extends DAO implements FollowsDAO {
     return Item;
   }
 
-  public async updateItem(follower_handle: string, followee_handle: string, new_follower_name: string, new_followee_name: string): Promise<void> {
-    follower_handle = this.addAtSymbol(follower_handle);
-    followee_handle = this.addAtSymbol(followee_handle);
-    const params = {
-      TableName: this.tableName,
-      Key: {
-        follower_handle,
-        followee_handle
-      },
-      UpdateExpression: "SET follower_name = :new_follower_name, followee_name = :new_followee_name",
-      ExpressionAttributeValues: {
-        ":new_follower_name": new_follower_name,
-        ":new_followee_name": new_followee_name
-      }
-    };
-    await this.client.send(new UpdateCommand(params));
-  }
+  // public async updateItem(follower_handle: string, followee_handle: string): Promise<void> {
+  //   // follower_handle = this.addAtSymbol(follower_handle);
+  //   // followee_handle = this.addAtSymbol(followee_handle);
+  //   const params = {
+  //     TableName: this.tableName,
+  //     Key: {
+  //       follower_handle,
+  //       followee_handle
+  //     },
+  //     UpdateExpression: "SET follower_name = :new_follower_name, followee_name = :new_followee_name",
+  //     ExpressionAttributeValues: {
+  //       ":new_follower_name": new_follower_name,
+  //       ":new_followee_name": new_followee_name
+  //     }
+  //   };
+  //   await this.client.send(new UpdateCommand(params));
+  // }
 
   public async deleteItem(follower_handle: string, followee_handle: string): Promise<void> {
     follower_handle = this.addAtSymbol(follower_handle);
@@ -85,7 +80,7 @@ export class DynamoFollowsDAO extends DAO implements FollowsDAO {
     // Perform the query
     const result = await this.client.send(new QueryCommand(params));
     const items = result.Items as Follows[];
-    const hasMorePages = result.LastEvaluatedKey == undefined
+    const hasMorePages = result.LastEvaluatedKey == undefined;
   
     // Construct and return the DataPage object
     return new DataPage<Follows>(items, hasMorePages);
@@ -111,6 +106,7 @@ export class DynamoFollowsDAO extends DAO implements FollowsDAO {
   }
 
   public async getFollowersCount(followee_handle: string): Promise<number> {
+
 
 
 

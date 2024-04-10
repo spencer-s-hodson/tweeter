@@ -21,9 +21,9 @@ class Service {
         const dyanmoUser = user;
         return new tweeter_shared_1.User(dyanmoUser.user_first_name, dyanmoUser.user_last_name, dyanmoUser.user_alias, dyanmoUser.user_image);
     }
-    parseFollows(follows) {
+    dynamoFollowsToFollows(follows) {
         const myObj = follows;
-        return new Follows_1.Follows(myObj.follower_handle, myObj.follower_name, myObj.followee_handle, myObj.followee_name);
+        return new Follows_1.Follows(myObj.follower_handle, myObj.followee_handle);
     }
 }
 exports.Service = Service;

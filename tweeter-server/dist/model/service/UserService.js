@@ -37,7 +37,7 @@ class UserService extends Service_1.Service {
             const user = this.dynamoUserToUser(existingUser);
             const authToken = tweeter_shared_1.AuthToken.Generate();
             // put authToken in table
-            yield this.authDAO.putAuth(authToken.token, authToken.timestamp);
+            yield this.authDAO.putAuth(authToken.token, authToken.timestamp, user.alias);
             // return a login response
             return new tweeter_shared_1.AuthenticateResponse(true, `Successfully logged in ${existingUser.firstName}.`, user, authToken);
         });
@@ -63,13 +63,11 @@ class UserService extends Service_1.Service {
             const image_url = yield this.userDAO.putImage(`${request.alias}-image`, request.userImageBytes);
             // put the user in the DB
             yield this.userDAO.putUser(request.alias, hashedPassword, request.firstName, request.lastName, image_url, 1, 1);
-            yield this.initialize();
             // create a user and authToken if all of this worked
             const user = new tweeter_shared_1.User(request.firstName, request.lastName, request.alias, image_url);
-            console.log("USER I CREATE: " + JSON.stringify(user));
             const authToken = tweeter_shared_1.AuthToken.Generate();
             // put the authToken in table
-            yield this.authDAO.putAuth(authToken.token, authToken.timestamp);
+            yield this.authDAO.putAuth(authToken.token, authToken.timestamp, user.alias);
             // return the appropriate response
             return new tweeter_shared_1.AuthenticateResponse(true, "success", user, authToken);
         });
@@ -82,6 +80,7 @@ class UserService extends Service_1.Service {
             }
             // delete the authToken
             yield this.authDAO.deleteAuth(request.authToken.token);
+            // await this.initialize();
             return new tweeter_shared_1.LogoutResponse(true, "successfuly logged user out");
         });
     }
@@ -127,6 +126,8 @@ class UserService extends Service_1.Service {
                 1 // followers
                 );
             }
+            // go mess with clint and flint in the database
+            // and then go mess with the dynamo excercise
         });
     }
 }
