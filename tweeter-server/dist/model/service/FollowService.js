@@ -20,8 +20,8 @@ class FollowService extends Service_1.Service {
         this.userDAO = Factory_1.Factory.factory.getUserDAO();
     }
     loadMoreFollowers(request) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            var _a;
             // make sure the request is okay
             if (request.user == null || request.authToken == null) {
                 throw new Error("Bad Request");
@@ -57,8 +57,8 @@ class FollowService extends Service_1.Service {
     }
     ;
     loadMoreFollowees(request) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            var _a;
             // make sure the request is okay
             if (request.user == null || request.authToken == null) {
                 throw new Error("Bad Request");

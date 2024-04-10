@@ -11,6 +11,7 @@ export class Service {
   }
   
   protected isValidAuthToken(authToken: AuthToken): boolean {
+    // make sure to delete the authToken
     return true;
     // const timeDifference: number = Date.now() - authToken.timestamp;
 

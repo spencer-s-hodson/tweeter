@@ -120,6 +120,21 @@ class DynamoFollowsDAO extends DAO_1.DAO {
             return 1;
         });
     }
+    getFollowerHandles(followee_handle) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const params = {
+                TableName: this.tableName,
+                Index: "follows_index",
+                KeyConditionExpression: 'followee_handle = :eh',
+                ExpressionAttributeValues: {
+                    ':eh': followee_handle,
+                },
+            };
+            const result = yield this.client.send(new lib_dynamodb_1.QueryCommand(params));
+            const items = result.Items; // replace this
+            return items;
+        });
+    }
     addAtSymbol(handle) {
         if (handle[0] == "@") {
             return handle;

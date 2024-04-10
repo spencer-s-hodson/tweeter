@@ -5,45 +5,65 @@ import { StoryDAO } from "../../dao/interfaces/StoryDAO";
 import { DataPage } from "../../entity/DataPage";
 import { FollowsDAO } from "../../dao/interfaces/FollowsDAO";
 import { UserDAO } from "../../dao/interfaces/UserDAO";
+import { FeedDAO } from "../../dao/interfaces/FeedDAO";
+import { Follows } from "../../entity/Follows";
 
 export class StatusService extends Service {
   public storyDAO: StoryDAO
   public followsDAO: FollowsDAO
   public userDAO: UserDAO;
+  public feedDAO: FeedDAO;
+
 
   public constructor() {
     super();
     this.storyDAO = Factory.factory.getStoryDAO();
     this.followsDAO = Factory.factory.getFollowsDAO();
     this.userDAO = Factory.factory.getUserDAO();
+    this.feedDAO = Factory.factory.getFeedDAO();
   }
 
-  // LOADS THE POSTS OF THE USERS THE SELECTED USER FOLLOWS
+
   public async loadMoreFeedItems(request: LoadMoreFeedItemsRequest): Promise<LoadMoreFeedItemsResponse> {
-    if (request.authToken == null) {
-      throw new Error("Auth Error: Invalid auth token");
-    }
-    if (request.user == null) {
-      throw new Error("Bad Request: User not found")
-    }
-
-    const [statusItems, hasMore] = FakeData.instance.getPageOfStatuses(request.lastItem, request.pageSize);
-    if (statusItems == null || hasMore == null) {
-      throw new Error("Internal Server Error: Something went wrong when connecting to the database")
+    console.log("Last Item: " + JSON.stringify(request.lastItem));
+    
+    // make sure the request is good
+    if (!request || !request.authToken || !request.pageSize || !request.user) {
+      throw new Error("[Bad Request]: Please enter all information");
     }
 
-    return new LoadMoreFeedItemsResponse(true, "successfully loaded more feed items", statusItems, hasMore);
+    // validate the authToken
+    if (!this.isValidAuthToken(request.authToken)) {
+      throw new Error("[Bad AuthToken]: Please resign in to perform this action");
+    }
+
+    // get the feed
+    const stuff: DataPage<Status> = await this.feedDAO.getPageOfFeed(request.user.alias, request.pageSize, request.lastItem?.timestamp);
+    const dynamoItems: Status[] = stuff.items;
+    const hasMorePages = stuff.hasMorePages;
+
+    // DEBUG
+    console.log("Dynamo Items: " + JSON.stringify(dynamoItems));
+    console.log("hasMore: " + JSON.stringify(hasMorePages))
+
+    let feed: Status[] = [];
+    for (let dynamoFeedItem of dynamoItems) {
+      const item: Status | null = await this.dynamoStatustoStatus(dynamoFeedItem);
+      console.log(JSON.stringify(item));
+      if (item) {
+        feed.push(item);
+      }
+      else {
+        throw new Error("Failed to retrieve post");
+      }
+    }
+
+    // return a response
+    return new LoadMoreFeedItemsResponse(true, "successfully loaded more feed items", feed, hasMorePages);
   };
 
-  // LOADS THE POSTS POSTED BY THE USER
-  public async loadMoreStoryItems(request: LoadMoreStoryItemsRequest): Promise<LoadMoreStoryItemsResponse> {
-    /**
-     * Story DB Design
-     * Partition Key: user_alias
-     * Sort Key: timestamp
-     * post: string
-     */
 
+  public async loadMoreStoryItems(request: LoadMoreStoryItemsRequest): Promise<LoadMoreStoryItemsResponse> {
     // make sure the request is okay
     if (!request || !request.authToken || !request.pageSize || !request.user) {
       throw new Error("[Bad Request]")
@@ -55,13 +75,13 @@ export class StatusService extends Service {
     }
 
     // get the posts that the user posted
-    const stuff: DataPage<Status> = await this.storyDAO.getPageOfStories(request.user.alias, request.pageSize, request.lastItem?.timestamp)
-    const postsFromDynamo = stuff.items;
+    const stuff: DataPage<Status> = await this.storyDAO.getPageOfStories(request.user.alias, request.pageSize, request.lastItem?.timestamp);
+    const dynamoItems = stuff.items;
     const hasMorePages = stuff.hasMorePages;
 
     let posts: Status[] = [];
-    for (let postItem of postsFromDynamo) {
-      const item: Status | null = await this.dynamoStatustoStatus(postItem);
+    for (let dynamoPostItem of dynamoItems) {
+      const item: Status | null = await this.dynamoStatustoStatus(dynamoPostItem);
       if (item) {
         posts.push(item);
       }
@@ -70,18 +90,7 @@ export class StatusService extends Service {
       }
     }
 
-    // if (request.authToken == null) {
-    //   throw new Error("Auth Error: Invalid auth token");
-    // }
-    // if (request.user == null) {
-    //   throw new Error("Bad Request: User not found")
-    // }
-
-    // const [statusItems, hasMore] = FakeData.instance.getPageOfStatuses(request.lastItem, request.pageSize);
-    // if (statusItems == null || hasMore == null) {
-    //   throw new Error("Internal Server Error: Something went wrong when connecting to the database")
-    // }
-
+    // return a response
     return new LoadMoreStoryItemsResponse(true, "successfully loaded more story items", posts, hasMorePages);
   };
 
@@ -89,56 +98,41 @@ export class StatusService extends Service {
   public async postStatus(request: PostStatusRequest): Promise<PostStatusResponse> {
     // make sure the request is good
     if (!request || !request.authToken || !request.newStatus) {
-      throw new Error("[Bad Request]")
+      throw new Error("[Bad Request]");
     }
 
     // validate authToken
     if (!this.isValidAuthToken(request.authToken)) {
-      throw new Error("Expired!")
+      throw new Error("Expired!");
     }
 
-    // get the user
+    // get the user alias through the authToken
     const dynamoAuth: AuthToken | null = await this.authDAO.getAuth(request.authToken.token);
     if (!dynamoAuth) {
       throw new Error("[Bad Auth]")
     }
     const user_alias = this.getAliasFromDynamoAuth(dynamoAuth);
 
-    // put status in story DB
-    await this.storyDAO.putStory(user_alias, request.newStatus.timestamp, request.newStatus.post)
+    // put status in story and feed DB
+    await this.storyDAO.putStory(user_alias, request.newStatus.timestamp, request.newStatus.post);
+
 
     // get all follows
-    // const stuff: DataPage<Follows> = await this.followsDAO.getPageOfFollowers(user_alias, page_siz)  // PAGE SIZE??
-
+    const follows: Follows[] = await this.followsDAO.getFollowerHandles(user_alias);
 
     // put status in feed DB for every follows
-
+    for (let dynamoFollow of follows) {
+      const follow = this.dynamoFollowsToFollows(dynamoFollow);
+      if (follow) {
+        await this.feedDAO.putFeed(follow.follower_handle, request.newStatus.timestamp, request.newStatus.post);
+      }
+      else {
+        throw new Error("something bad happened")
+      }
+    }
 
     // return a response
-    // await new Promise((f) => setTimeout(f, 10000));
     return new PostStatusResponse(true, "successfully posted a status");
-
-
-
-
-
-
-
-
-
-
-
-
-    // if (request.authToken == null) {
-    //   throw new Error("Auth Error: Invalid auth token");
-    // }
-
-    // if (request.newStatus == null) {
-    //   throw new Error("Bad Request: newStatus is null");
-    // }
-
-    // await new Promise((f) => setTimeout(f, 2000));
-    // return new PostStatusResponse(true, "successfuly posted status");
   };
 
   private async dynamoStatustoStatus(item: Status): Promise<Status | null> {

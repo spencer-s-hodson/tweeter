@@ -123,6 +123,22 @@ export class DynamoFollowsDAO extends DAO implements FollowsDAO {
   }
 
 
+  public async getFollowerHandles(followee_handle: string) {
+    const params = {
+      TableName: this.tableName,
+      Index: "follows_index",
+      KeyConditionExpression: 'followee_handle = :eh',
+      ExpressionAttributeValues: {
+        ':eh': followee_handle,
+      },
+    }
+
+    const result = await this.client.send(new QueryCommand(params));  
+    const items = result.Items as Follows[]; // replace this
+    return items;
+  }
+
+
 
 
   private addAtSymbol(handle: string) {

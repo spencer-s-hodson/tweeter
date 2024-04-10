@@ -9,6 +9,7 @@ class Service {
         this.authDAO = Factory_1.Factory.factory.getAuthDAO();
     }
     isValidAuthToken(authToken) {
+        // make sure to delete the authToken
         return true;
         // const timeDifference: number = Date.now() - authToken.timestamp;
         // // 20 minutes

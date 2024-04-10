@@ -10,5 +10,6 @@ export interface FollowsDAO {
   getPageOfFollowers: (followee_handle: string, page_size: number, last_follower_handle: string | undefined) => Promise<DataPage<Follows>>
   getFollowersCount: (followee_handle: string) => Promise<number>
   getFolloweesCount: (follower_handle: string) => Promise<number>
+  getFollowerHandles: (followee_handle: string) => Promise<Follows[]>
   // getIsFollower: () => Promise<boolean>
 }
