@@ -26,7 +26,7 @@ export class DynamoAuthDAO extends DAO implements AuthDAO {
     const params = {
       TableName: this.tableName,
       Key: {
-        token
+        token  // only works if key is called token in DB
       }
     };
     await this.client.send(new DeleteCommand(params));

@@ -16,9 +16,9 @@ describe("Server Facade Tests", () => {
     expect(resp.authToken).not.toBeNull();
     expect(resp.message).not.toBeNull();
     expect(resp.success).toBe(true);
-    expect(resp.user.firstName).toBe("Allen");
-    expect(resp.user.lastName).toBe("Anderson");
-    expect(resp.user.alias).toBe("@allen");
+    expect(resp.user.firstName).toBe("spencer");
+    expect(resp.user.lastName).toBe("hodson");
+    expect(resp.user.alias).toBe("@spenztheman");
   })
 
   /**

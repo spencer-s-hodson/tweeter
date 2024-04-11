@@ -30,8 +30,6 @@ class DynamoFollowsDAO extends DAO_1.DAO {
     }
     getItem(follower_handle, followee_handle) {
         return __awaiter(this, void 0, void 0, function* () {
-            // follower_handle = this.addAtSymbol(follower_handle);
-            // followee_handle = this.addAtSymbol(followee_handle);
             const key = {
                 follower_handle,
                 followee_handle
@@ -40,23 +38,6 @@ class DynamoFollowsDAO extends DAO_1.DAO {
             return Item;
         });
     }
-    // public async updateItem(follower_handle: string, followee_handle: string): Promise<void> {
-    //   // follower_handle = this.addAtSymbol(follower_handle);
-    //   // followee_handle = this.addAtSymbol(followee_handle);
-    //   const params = {
-    //     TableName: this.tableName,
-    //     Key: {
-    //       follower_handle,
-    //       followee_handle
-    //     },
-    //     UpdateExpression: "SET follower_name = :new_follower_name, followee_name = :new_followee_name",
-    //     ExpressionAttributeValues: {
-    //       ":new_follower_name": new_follower_name,
-    //       ":new_followee_name": new_followee_name
-    //     }
-    //   };
-    //   await this.client.send(new UpdateCommand(params));
-    // }
     deleteItem(follower_handle, followee_handle) {
         return __awaiter(this, void 0, void 0, function* () {
             follower_handle = this.addAtSymbol(follower_handle);
@@ -74,7 +55,6 @@ class DynamoFollowsDAO extends DAO_1.DAO {
     getPageOfFollowees(follower_handle, page_size, last_followee_handle) {
         return __awaiter(this, void 0, void 0, function* () {
             follower_handle = this.addAtSymbol(follower_handle);
-            // last_followee_handle = this.addAtSymbol(last_followee_handle);
             const params = {
                 TableName: this.tableName,
                 KeyConditionExpression: 'follower_handle = :fh',
@@ -110,21 +90,11 @@ class DynamoFollowsDAO extends DAO_1.DAO {
             return new DataPage_1.DataPage(items, lastKey);
         });
     }
-    getFollowersCount(followee_handle) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return 1;
-        });
-    }
-    getFolloweesCount(follower_handle) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return 1;
-        });
-    }
     getFollowerHandles(followee_handle) {
         return __awaiter(this, void 0, void 0, function* () {
             const params = {
                 TableName: this.tableName,
-                Index: "follows_index",
+                IndexName: "follows_index",
                 KeyConditionExpression: 'followee_handle = :eh',
                 ExpressionAttributeValues: {
                     ':eh': followee_handle,

@@ -18,12 +18,13 @@ class DynamoFeedDAO extends DAO_1.DAO {
         super(...arguments);
         this.tableName = "feed";
     }
-    putFeed(user_alias, timestamp, post) {
+    putFeed(user_alias, timestamp, post, author) {
         return __awaiter(this, void 0, void 0, function* () {
             const item = {
                 user_alias,
                 timestamp,
-                post
+                post,
+                author
             };
             yield this.client.send(new lib_dynamodb_1.PutCommand({ TableName: this.tableName, Item: item }));
         });
@@ -41,6 +42,7 @@ class DynamoFeedDAO extends DAO_1.DAO {
             };
             // Perform the query
             const result = yield this.client.send(new lib_dynamodb_1.QueryCommand(params));
+            console.log(JSON.stringify(result));
             const items = result.Items;
             const hasMorePages = result.LastEvaluatedKey == undefined;
             // Construct and return the DataPage object

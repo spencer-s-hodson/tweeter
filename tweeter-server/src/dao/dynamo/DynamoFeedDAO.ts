@@ -7,11 +7,12 @@ import { DataPage } from "../../entity/DataPage";
 export class DynamoFeedDAO extends DAO implements FeedDAO {
   public tableName: string = "feed";
 
-  public async putFeed(user_alias: string, timestamp: number, post: string): Promise<void> {
+  public async putFeed(user_alias: string, timestamp: number, post: string, author: string): Promise<void> {
     const item = {
       user_alias,
       timestamp,
-      post
+      post,
+      author
     }
     await this.client.send(new PutCommand({ TableName: this.tableName, Item: item }));
   }

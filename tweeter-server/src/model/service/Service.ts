@@ -1,28 +1,17 @@
 import { AuthToken, User } from "tweeter-shared";
 import { AuthDAO } from "../../dao/interfaces/AuthDAO";
 import { Factory } from "../../factory/Factory";
-import { Follows } from "../../entity/Follows";
+import { UserDAO } from "../../dao/interfaces/UserDAO";
 
 export class Service {
   protected authDAO: AuthDAO;
+  protected userDAO: UserDAO;
 
   constructor() {
     this.authDAO = Factory.factory.getAuthDAO();
+    this.userDAO = Factory.factory.getUserDAO();
   }
   
-  protected isValidAuthToken(authToken: AuthToken): boolean {
-    // make sure to delete the authToken
-    return true;
-    // const timeDifference: number = Date.now() - authToken.timestamp;
-
-    // // 20 minutes
-    // if (timeDifference >= 120000) {
-    //   return false;
-    // }
-
-    // return true;
-  }
-
   protected dynamoUserToUser(user: any) {
     interface DyanmoUser {
       user_first_name: string
@@ -43,19 +32,6 @@ export class Service {
     );
   }
 
-  protected dynamoFollowsToFollows(follows: Follows) {
-    interface IFollows {
-      followee_handle: string
-      follower_handle: string
-    }
-    const myObj: IFollows = follows as unknown as IFollows;
-
-    return new Follows(
-      myObj.follower_handle,
-      myObj.followee_handle,
-    )
-  }
-
   protected dynamoAuthtoAuth(authToken: AuthToken) {
     interface DynamoAuthToken {
       user_alias: string
@@ -68,15 +44,5 @@ export class Service {
       myObj.token,
       myObj.timestamp
     );
-  }
-
-  protected getAliasFromDynamoAuth(authToken: AuthToken) {
-    interface DynamoAuthToken {
-      token: string
-      timestap: number
-      user_alias: string
-    }
-    const dynamoAuthToken: DynamoAuthToken = authToken as unknown as DynamoAuthToken;
-    return dynamoAuthToken.user_alias;
   }
 }

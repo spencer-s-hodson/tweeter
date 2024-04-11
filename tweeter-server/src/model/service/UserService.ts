@@ -1,12 +1,9 @@
 import SHA256 from "crypto-js/sha256";
 import { AuthToken, AuthenticateResponse, GetUserRequest, GetUserResponse, LoginRequest, LogoutRequest, LogoutResponse, RegisterRequest, User } from "tweeter-shared";
 import { Factory } from "../../factory/Factory";
-import { UserDAO } from "../../dao/interfaces/UserDAO";
 import { Service } from "./Service";
 
 export class UserService extends Service {
-  private userDAO: UserDAO;
-
   public constructor() {
     super();
     this.userDAO = Factory.factory.getUserDAO();
@@ -14,14 +11,14 @@ export class UserService extends Service {
 
   public async login(request: LoginRequest): Promise<AuthenticateResponse> {
     // make sure the request is okay
-    if (request.alias == null || request.password == null) {
-      throw new Error("Bad Request: Please enter a username and a password");
+    if (!request || !request.alias || !request.password) {
+      throw new Error("[Bad Request]: Please enter a username and a password");
     }
 
     // if the user doesn't exist then throw an error
     const existingUser: User | null = await this.userDAO.getUser(request.alias);
     if (existingUser == null) {
-      throw new Error("Internal Server Error: Invalid alias or password");
+      throw new Error("[Unauthorized]: Invalid alias or password");
     }
 
     // create user and authToken
@@ -36,22 +33,17 @@ export class UserService extends Service {
   };
 
 
-
-  // TODO: make sure the right error message is getting thrown
   public async register(request: RegisterRequest): Promise<AuthenticateResponse> {
     // make sure the request is okay
-    if (request.alias == null || request.password == null || request.firstName == null || request.lastName == null || request.userImageBytes == null) {
-      throw new Error("Bad Request: Please enter all information");
+    if (!request || !request.alias || !request.password || !request.firstName || !request.lastName || !request.userImageBytes) {
+      throw new Error("[Bad Request]: Please enter all information");
     }
 
     // check if the user already exists
-    console.log(request.alias);
     const existingUser: User | null = await this.userDAO.getUser(request.alias);
     if (existingUser != null) {
-      throw new Error("User already exists in DB!");  // should this return a bad AuthenticateResponse instead?
+      throw new Error("[Unauthorized]: A user with this username already exists");
     }
-
-    console.log("EXISTING USER: JSON.stringify(existingUser)");
 
     // hash the password
     const hashedPassword = UserService.hashPassword(request.password);
@@ -60,7 +52,7 @@ export class UserService extends Service {
     const image_url: string = await this.userDAO.putImage(`${request.alias}-image`, request.userImageBytes);
 
     // put the user in the DB
-    await this.userDAO.putUser(request.alias, hashedPassword, request.firstName, request.lastName, image_url, 1, 1);
+    await this.userDAO.putUser(request.alias, hashedPassword, request.firstName, request.lastName, image_url, 0, 0);
     
     // create a user and authToken if all of this worked
     const user = new User(request.firstName, request.lastName, request.alias, image_url);
@@ -70,38 +62,38 @@ export class UserService extends Service {
     await this.authDAO.putAuth(authToken.token, authToken.timestamp, user.alias);
 
     // return the appropriate response
-    return new AuthenticateResponse(true, "success", user, authToken);
+    return new AuthenticateResponse(true, `Successfully registered ${user.firstName} ${user.lastName}`, user, authToken);
   }
+
 
   public async logout(request: LogoutRequest): Promise<LogoutResponse> {
     // make sure the request is okay
-    if (request.authToken == null) {
-      throw new Error("Auth Error: Invalid auth token");
+    if (!request || !request.authToken) {
+      throw new Error("[Bad Request]: Unable to logout the user");
     }
 
-    // delete the authToken
+    // delete the authToken in the DB
     await this.authDAO.deleteAuth(request.authToken.token);
-    // await this.initialize();
 
-    return new LogoutResponse(true, "successfuly logged user out");
+    return new LogoutResponse(true, "Successfuly logged user out");
   };
 
-  // test this
+
   public async getUser(request: GetUserRequest): Promise<GetUserResponse> {
     // make sure the request is good
-    if (request.alias == null) {
-      throw new Error("Bad Request: User does not exist");
+    if (!request || !request.alias || !request.authToken) {
+      throw new Error("[Bad Request]: Please enter all information");
     }
 
     // get the authtoken from the database
     const auth = await this.authDAO.getAuth(request.authToken.token);
-    if (auth == null) {
-      throw new Error("Auth Error: Invalid auth token");
+    if (!auth) {
+      throw new Error("[Internal Server Error]: Couldn't get and authToken from the DB");
     }
 
     // get the user
     const user: User | null = await this.userDAO.getUser(request.alias);
-    if (user == null) {
+    if (!user) {
       return new GetUserResponse(false, "couldn't find user", null);
     }
     else {
@@ -113,23 +105,5 @@ export class UserService extends Service {
   // hashs the password
   private static hashPassword(password: string): string {
     return SHA256(password).toString();
-  }
-
-  private async initialize() {
-    // add user0 - user24 with put command
-    for (let i = 0; i < 25; i++) {
-      await this.userDAO.putUser(
-        `@User${i}`, // alias
-        "a",        // password
-        "User",     // first name
-        `${i}`,          // last name
-        "https://faculty.cs.byu.edu/~jwilkerson/cs340/tweeter/images/donald_duck.png",  // why doesn't this work
-        1,          // following
-        1           // followers
-      );
-    }
-
-    // go mess with clint and flint in the database
-    // and then go mess with the dynamo excercise
   }
 }
