@@ -13,9 +13,7 @@ exports.getUserHandler = void 0;
 const tweeter_shared_1 = require("tweeter-shared");
 const UserService_1 = require("../model/service/UserService");
 const getUserHandler = (event) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("Event before deserialization: " + JSON.stringify(event));
     const deserializedEvent = tweeter_shared_1.GetUserRequest.fromJson(event);
-    console.log("Deserialized Event: " + JSON.stringify(deserializedEvent));
     return new UserService_1.UserService().getUser(deserializedEvent);
 });
 exports.getUserHandler = getUserHandler;

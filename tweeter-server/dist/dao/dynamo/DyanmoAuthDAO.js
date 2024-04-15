@@ -41,7 +41,7 @@ class DynamoAuthDAO extends DAO_1.DAO {
             const params = {
                 TableName: this.tableName,
                 Key: {
-                    token
+                    token // only works if key is called token in DB
                 }
             };
             yield this.client.send(new lib_dynamodb_1.DeleteCommand(params));
