@@ -9,16 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.postStatusHandler = void 0;
+exports.handler = void 0;
 const tweeter_shared_1 = require("tweeter-shared");
-const StatusService_1 = require("../model/service/StatusService");
-const postStatusHandler = (event) => __awaiter(void 0, void 0, void 0, function* () {
-    const deserializedEvent = tweeter_shared_1.PostStatusRequest.fromJson(event);
-    const result = yield new StatusService_1.StatusService().postStatus(deserializedEvent);
-    // if (result.success) {
-    //   // send message to the first queue
-    //   await this.sqs.sendMessage(JSON.stringify(request), POST_STATUS_QUEUE);
-    // }
-    return result;
+const BATCH_SIZE = 25;
+const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
+    let authTokenJSON = JSON.parse(event.Records[0].body).authToken;
+    let statusJSON = JSON.parse(event.Records[0].body).status;
+    let authToken = tweeter_shared_1.AuthToken.fromJson(JSON.stringify(authTokenJSON));
+    let status = tweeter_shared_1.Status.fromJson(JSON.stringify(statusJSON));
+    // call the service and handle the errors there?
 });
-exports.postStatusHandler = postStatusHandler;
+exports.handler = handler;

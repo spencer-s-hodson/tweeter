@@ -13,16 +13,21 @@ exports.StatusService = void 0;
 const tweeter_shared_1 = require("tweeter-shared");
 const Factory_1 = require("../../factory/Factory");
 const AuthService_1 = require("./AuthService");
+const Queue_1 = require("../../sqs/Queue");
+// change these name
+const POST_STATUS_QUEUE = "https://sqs.us-west-2.amazonaws.com/839064361653/postStatusQueue";
+const UPDATE_FEED_QUEUE = "https://sqs.us-west-2.amazonaws.com/839064361653/updateFeedQueue";
 class StatusService extends AuthService_1.AuthService {
     constructor() {
         super();
         this.storyDAO = Factory_1.Factory.factory.getStoryDAO();
         this.followsDAO = Factory_1.Factory.factory.getFollowsDAO();
         this.feedDAO = Factory_1.Factory.factory.getFeedDAO();
+        this.sqs = new Queue_1.MySQS();
     }
     loadMoreFeedItems(request) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            var _a;
             // make sure the request is good
             if (!request || !request.authToken || !request.pageSize || !request.user) {
                 throw new Error("[Bad Request]: Please enter all information");
@@ -51,8 +56,8 @@ class StatusService extends AuthService_1.AuthService {
     }
     ;
     loadMoreStoryItems(request) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            var _a;
             // make sure the request is okay
             if (!request || !request.authToken || !request.pageSize || !request.user) {
                 throw new Error("[Bad Request]: Please enter all information");
@@ -98,23 +103,38 @@ class StatusService extends AuthService_1.AuthService {
             const user_alias = this.getAliasFromDynamoAuth(dynamoAuth);
             // put status in story and feed DB
             yield this.storyDAO.putStory(user_alias, request.newStatus.timestamp, request.newStatus.post);
-            // get all followers of the user that's posting
-            const follows = yield this.followsDAO.getFollowerHandles(user_alias);
-            // put status in feed DB for every follows
-            for (let dynamoFollow of follows) {
-                const follow = this.dynamoFollowsToFollows(dynamoFollow);
-                if (follow) {
-                    yield this.feedDAO.putFeed(follow.follower_handle, request.newStatus.timestamp, request.newStatus.post, user_alias);
-                }
-                else {
-                    throw new Error("[Internal Server Error]: Failed to get the follows relationship");
-                }
-            }
-            // return a response
             return new tweeter_shared_1.PostStatusResponse(true, "successfully posted a status");
         });
     }
     ;
+    postUpdateFeedMessages(request) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!request || !request.newStatus || !request.authToken) {
+                throw new Error("[Bad Request]: Please enter all information");
+            }
+            const author = yield this.userDAO.getUser(request.newStatus.user.alias);
+            if (!author) {
+                throw new Error("[Internal Server Error]: Failed to retrieve the author of the post");
+            }
+            let follows = yield this.followsDAO.getFollowerHandles(author.alias);
+            const BATCH_SIZE = 250;
+            for (let i = 0; i < follows.length; i += BATCH_SIZE) {
+                const batch = follows.slice(i, i + BATCH_SIZE);
+                const message = JSON.stringify({
+                    status: request.newStatus,
+                    followers: batch
+                });
+                try {
+                    yield this.sqs.sendMessage(message, UPDATE_FEED_QUEUE);
+                    console.log("Success, message sent.");
+                }
+                catch (err) {
+                    throw new Error("[Internal Server Error]: Failed to send a message to the queue");
+                }
+            }
+        });
+    }
+    // return new PostStatusResponse(true, "successfully posted a status");
     dynamoFeedtoStatus(item) {
         return __awaiter(this, void 0, void 0, function* () {
             const myObj = item;

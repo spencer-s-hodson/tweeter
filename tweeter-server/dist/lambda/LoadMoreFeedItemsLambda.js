@@ -13,9 +13,7 @@ exports.loadMoreFeedItemsHandler = void 0;
 const tweeter_shared_1 = require("tweeter-shared");
 const StatusService_1 = require("../model/service/StatusService");
 const loadMoreFeedItemsHandler = (event) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("Event before deserialization: " + JSON.stringify(event));
     const deserializedEvent = tweeter_shared_1.LoadMoreFeedItemsRequest.fromJson(event);
-    console.log("Deserialized Event: " + JSON.stringify(deserializedEvent));
     return new StatusService_1.StatusService().loadMoreFeedItems(deserializedEvent);
 });
 exports.loadMoreFeedItemsHandler = loadMoreFeedItemsHandler;

@@ -19,8 +19,8 @@ class FollowService extends AuthService_1.AuthService {
         this.followsDAO = Factory_1.Factory.factory.getFollowsDAO();
     }
     loadMoreFollowers(request) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            var _a;
             // make sure the request is okay
             if (!request.user || !request.authToken) {
                 throw new Error("[Bad Request]: Please enter all information");
@@ -48,8 +48,8 @@ class FollowService extends AuthService_1.AuthService {
     }
     ;
     loadMoreFollowees(request) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            var _a;
             // make sure the request is okay
             if (!request.user || !request.authToken) {
                 throw new Error("[Bad Request]: Please enter all information");

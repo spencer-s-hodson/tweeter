@@ -1,4 +1,4 @@
-import { PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { BatchWriteCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { DAO } from "../DAO";
 import { FeedDAO } from "../interfaces/FeedDAO";
 import { Status } from "tweeter-shared";
@@ -36,5 +36,28 @@ export class DynamoFeedDAO extends DAO implements FeedDAO {
   
     // Construct and return the DataPage object
     return new DataPage<Status>(items, hasMorePages);
+  }
+
+
+  // this should be for m4b?
+  public async addToFeed(aliases: string[], author: string, post: string, timestamp: number) {
+    const requests = aliases.map((user_alias) => ({
+      PutRequest: {
+        Item: {
+          user_alias,
+          timestamp,
+          author,
+          post
+        },
+      },
+    }));
+    const params = {
+      RequestItems: { // this might not be right?
+        "feed": requests,
+      },
+    };
+  
+    const command = new BatchWriteCommand(params)
+    await this.client.send(command);
   }
 }

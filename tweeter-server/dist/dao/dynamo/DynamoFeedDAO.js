@@ -49,5 +49,27 @@ class DynamoFeedDAO extends DAO_1.DAO {
             return new DataPage_1.DataPage(items, hasMorePages);
         });
     }
+    // this should be for m4b?
+    addToFeed(aliases, author, post, timestamp) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const requests = aliases.map((user_alias) => ({
+                PutRequest: {
+                    Item: {
+                        user_alias,
+                        timestamp,
+                        author,
+                        post
+                    },
+                },
+            }));
+            const params = {
+                RequestItems: {
+                    "feed": requests,
+                },
+            };
+            const command = new lib_dynamodb_1.BatchWriteCommand(params);
+            yield this.client.send(command);
+        });
+    }
 }
 exports.DynamoFeedDAO = DynamoFeedDAO;

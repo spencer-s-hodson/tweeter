@@ -6,11 +6,17 @@ import { FollowsDAO } from "../../dao/interfaces/FollowsDAO";
 import { FeedDAO } from "../../dao/interfaces/FeedDAO";
 import { Follows } from "../../entity/Follows";
 import { AuthService } from "./AuthService";
+import { MySQS } from "../../sqs/Queue";
+
+// change these name
+const POST_STATUS_QUEUE = "https://sqs.us-west-2.amazonaws.com/839064361653/postStatusQueue";
+const UPDATE_FEED_QUEUE = "https://sqs.us-west-2.amazonaws.com/839064361653/updateFeedQueue";
 
 export class StatusService extends AuthService {
   public storyDAO: StoryDAO
   public followsDAO: FollowsDAO
   public feedDAO: FeedDAO;
+  public sqs: MySQS;
 
 
   public constructor() {
@@ -18,6 +24,7 @@ export class StatusService extends AuthService {
     this.storyDAO = Factory.factory.getStoryDAO();
     this.followsDAO = Factory.factory.getFollowsDAO();
     this.feedDAO = Factory.factory.getFeedDAO();
+    this.sqs = new MySQS();
   }
 
 
@@ -106,23 +113,51 @@ export class StatusService extends AuthService {
     // put status in story and feed DB
     await this.storyDAO.putStory(user_alias, request.newStatus.timestamp, request.newStatus.post);
 
-    // get all followers of the user that's posting
-    const follows: Follows[] = await this.followsDAO.getFollowerHandles(user_alias);
-
-    // put status in feed DB for every follows
-    for (let dynamoFollow of follows) {
-      const follow = this.dynamoFollowsToFollows(dynamoFollow);
-      if (follow) {
-        await this.feedDAO.putFeed(follow.follower_handle, request.newStatus.timestamp, request.newStatus.post, user_alias);
-      }
-      else {
-        throw new Error("[Internal Server Error]: Failed to get the follows relationship")
-      }
-    }
-
-    // return a response
     return new PostStatusResponse(true, "successfully posted a status");
   };
+
+
+  public async postUpdateFeedMessages(request: PostStatusRequest): Promise<void> {
+    if (!request || !request.newStatus || !request.authToken) {
+      throw new Error("[Bad Request]: Please enter all information");
+    }
+
+    const author: User | null = await this.userDAO.getUser(request.newStatus.user.alias);
+    if (!author) {
+      throw new Error("[Internal Server Error]: Failed to retrieve the author of the post");
+    }
+
+    let follows: Follows[] = await this.followsDAO.getFollowerHandles(author.alias);
+
+    const BATCH_SIZE = 250;
+
+    for (let i = 0; i < follows.length; i += BATCH_SIZE) {
+      const batch = follows.slice(i, i + BATCH_SIZE);
+      const message = JSON.stringify({
+        status: request.newStatus,
+        followers: batch
+      })
+
+      try {
+        await this.sqs.sendMessage(message, UPDATE_FEED_QUEUE);
+        console.log("Success, message sent.");
+      } catch (err) {
+        throw new Error("[Internal Server Error]: Failed to send a message to the queue");
+      }
+
+    }
+  }
+
+
+  // return new PostStatusResponse(true, "successfully posted a status");
+
+
+
+
+
+
+
+
 
 
   private async dynamoFeedtoStatus(item: Status): Promise<Status | null> {
@@ -132,6 +167,8 @@ export class StatusService extends AuthService {
       timestamp: number
       author: string
     }
+
+
     const myObj: DynamoStatus = item as unknown as DynamoStatus;
     const dynamoUser: User | null = await this.userDAO.getUser(myObj.author)
     const user = this.dynamoUserToUser(dynamoUser);

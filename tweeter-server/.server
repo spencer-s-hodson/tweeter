@@ -14,5 +14,6 @@ loadMoreFeedItems
 loadMoreFollowees
 register
 logout
+postUpdateFeedMessages
 '
 LAMBDALAYER_ARN='arn:aws:lambda:us-west-2:839064361653:layer:Tweeter-Layer:26'

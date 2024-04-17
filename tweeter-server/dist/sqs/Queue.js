@@ -9,16 +9,27 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.postStatusHandler = void 0;
-const tweeter_shared_1 = require("tweeter-shared");
-const StatusService_1 = require("../model/service/StatusService");
-const postStatusHandler = (event) => __awaiter(void 0, void 0, void 0, function* () {
-    const deserializedEvent = tweeter_shared_1.PostStatusRequest.fromJson(event);
-    const result = yield new StatusService_1.StatusService().postStatus(deserializedEvent);
-    // if (result.success) {
-    //   // send message to the first queue
-    //   await this.sqs.sendMessage(JSON.stringify(request), POST_STATUS_QUEUE);
-    // }
-    return result;
-});
-exports.postStatusHandler = postStatusHandler;
+exports.MySQS = void 0;
+const client_sqs_1 = require("@aws-sdk/client-sqs");
+class MySQS {
+    constructor() {
+        this.sqsClient = new client_sqs_1.SQSClient();
+    }
+    sendMessage(messageBody, sqs_url) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const params = {
+                DelaySeconds: 10,
+                MessageBody: messageBody,
+                QueueUrl: sqs_url,
+            };
+            try {
+                const data = yield this.sqsClient.send(new client_sqs_1.SendMessageCommand(params));
+                console.log("Success, message sent. MessageID:", data.MessageId);
+            }
+            catch (err) {
+                throw err;
+            }
+        });
+    }
+}
+exports.MySQS = MySQS;
